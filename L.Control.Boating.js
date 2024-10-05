@@ -144,7 +144,6 @@ L.Control.Boating = L.Control.extend({
   },
 
   onLocationFound(e) {
-    console.log(e)
     if (this.isRequesting()) {
       this._map.options.scrollWheelZoom = 'center'
       this._map.options.doubleClickZoom = 'center'
