@@ -184,7 +184,7 @@ L.Control.Boating = L.Control.extend({
 
   boatUpdate(e) {
     const heading = e.heading || this.lastHeading || 0
-    let html = '<svg transform="rotate(' + heading + ')" viewBox="0 0 512 512"> xmlns="http://www.w3.org/2000/svg"'
+    let html = '<svg transform="rotate(' + heading + ')" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">'
     html += '<path d="M 384 512 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512" fill="#3388ff"/>'
     html += '</svg>'
     const icon = L.divIcon({
