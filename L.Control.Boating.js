@@ -56,7 +56,7 @@ L.Control.Boating = L.Control.extend({
     })
 
     this.line = L.polyline([[0, 0], [0, 0]], {
-      dashArray: '8,10,2,10',
+      opacity: .4,
     })
 
     this.boat = L.marker([0, 0])
