@@ -59,6 +59,8 @@ L.Control.Boating = L.Control.extend({
       dashArray: '8,10,2,10',
     })
 
+    this.boat = L.marker([0, 0])
+
     this.legend = L.control({position: 'bottomright'})
     this.legend.onAdd = function (map) {
       this.legendContent = L.DomUtil.create('div',
@@ -138,6 +140,7 @@ L.Control.Boating = L.Control.extend({
     this._map.removeControl(this.legend)
     this._map.removeLayer(this.circle)
     this._map.removeLayer(this.line)
+    this._map.removeLayer(this.boat)
   },
 
   onLocationFound(e) {
@@ -151,10 +154,12 @@ L.Control.Boating = L.Control.extend({
       this._map.addControl(this.legend)
       this._map.addLayer(this.circle)
       this._map.addLayer(this.line)
+      this._map.addLayer(this.boat)
     }
     if (this.isFollowing()) {
       this._map.panTo(e.latlng)
     }
+    this.boatUpdate(e)
     this.lineUpdate(e)
     this.legendUpdate(e)
     this.circleUpdate(e)
@@ -170,6 +175,18 @@ L.Control.Boating = L.Control.extend({
       alert('unlock geolocation please')
       this.stop()
     }
+  },
+
+  boatUpdate(e) {
+    const heading = e.heading || this.lastHeading || 0
+    const icon = L.divIcon({
+      className: 'boat',
+      html: '<svg transform="rotate(' + heading + ')" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M 384 492 128 492 C 128 492 128 148 256 20 C 384 148 384 507 384 507" stroke-width="20" stroke="black" fill="#3388ff"/></svg>',
+      iconAnchor: [10, 10],
+      iconSize: [25, 25]
+    })
+    this.boat.setLatLng(e.latlng)
+    this.boat.setIcon(icon)
   },
 
   circleUpdate(e) {
