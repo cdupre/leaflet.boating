@@ -179,10 +179,13 @@ L.Control.Boating = L.Control.extend({
 
   boatUpdate(e) {
     const heading = e.heading || this.lastHeading || 0
+    let html = '<svg transform="rotate(' + heading + ')" viewBox="0 0 512 512"> xmlns="http://www.w3.org/2000/svg"'
+    html += '<path d="M 384 492 128 492 C 128 492 128 148 256 20 C 384 148 384 507 384 507" fill="#3388ff"/>'
+    html += '</svg>'
     const icon = L.divIcon({
       className: 'boat',
-      html: '<svg transform="rotate(' + heading + ')" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M 384 492 128 492 C 128 492 128 148 256 20 C 384 148 384 507 384 507" stroke-width="20" stroke="black" fill="#3388ff"/></svg>',
-      iconAnchor: [10, 10],
+      html: html,
+      iconAnchor: [12.5, 12.5],
       iconSize: [25, 25]
     })
     this.boat.setLatLng(e.latlng)
