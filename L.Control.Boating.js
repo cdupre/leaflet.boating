@@ -33,6 +33,9 @@ L.toDMS = function(latlng) {
 }
 
 L.Control.Boating = L.Control.extend({
+  options: {
+    position: "topleft",
+  },
   onAdd(map) {
     const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control')
     const link = L.DomUtil.create('a', 'leaflet-bar-part leaflet-bar-part-single', container)
