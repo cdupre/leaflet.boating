@@ -15,5 +15,5 @@ Leaflet.Boating is extended from leaflet Control. See [documentation](https://le
 ## Developers
 #### App workflow
 <div align="center">
-  <img width="33%" src="./workflow.svg">
+  <img width="66%" src="./workflow.svg">
 </div>
