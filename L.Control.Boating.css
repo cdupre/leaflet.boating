@@ -12,7 +12,7 @@
 .leaflet-control-boating-arrow.locating {
   background-image: url('data:image/svg+xml;charset=UTF-8,<svg transform="rotate(45)" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="M 384 512 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512" fill="rgb(51, 136, 255)"/></svg>');
 }
-.leaflet-control-boating-arrow.locating.following {
+.leaflet-control-boating-arrow.following {
   background-image: url('data:image/svg+xml;charset=UTF-8,<svg transform="rotate(45)" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="M 384 512 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512" fill="rgb(252, 132, 40)"/></svg>');
 }
 .leaflet-control-boating-legend {

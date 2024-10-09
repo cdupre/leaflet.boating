@@ -102,7 +102,7 @@ L.Control.Boating = L.Control.extend({
 
 
   onMoveEnd() {
-    if (this.isLocating()) {
+    if (this.isLocating() || this.isFollowing()) {
       this.lineUpdate()
     }
   },
@@ -112,8 +112,9 @@ L.Control.Boating = L.Control.extend({
       this._map.options.scrollWheelZoom = 'center'
       this._map.options.doubleClickZoom = 'center'
       this._map.panTo(this.lastPosition.latlng)
+      this.icon.classList.remove('locating')
       this.icon.classList.add('following')
-    } else { // start
+    } else {
       this._map.on('moveend', this.onMoveEnd, this)
       this._map.on('dragstart', this.onDragStart, this)
       this._map.on('locationfound', this.onLocationFound, this)
@@ -127,6 +128,7 @@ L.Control.Boating = L.Control.extend({
     this._map.options.scrollWheelZoom = true
     this._map.options.doubleClickZoom = true
     this.icon.classList.remove('following')
+    this.icon.classList.add('locating')
   },
 
   stop() {
@@ -138,8 +140,8 @@ L.Control.Boating = L.Control.extend({
     this._map.options.scrollWheelZoom = true
     this._map.options.doubleClickZoom = true
     this.icon.classList.remove('requesting')
-    this.icon.classList.remove('locating')
     this.icon.classList.remove('following')
+    this.icon.classList.remove('locating')
     this._map.removeControl(this.legend)
     this._map.removeLayer(this.circle)
     this._map.removeLayer(this.line)
@@ -152,7 +154,6 @@ L.Control.Boating = L.Control.extend({
       this._map.options.doubleClickZoom = 'center'
       this.icon.classList.remove('requesting')
       this.icon.classList.add('following')
-      this.icon.classList.add('locating')
       this._map.addControl(this.legend)
       this._map.addLayer(this.circle)
       this._map.addLayer(this.line)
@@ -190,10 +191,10 @@ L.Control.Boating = L.Control.extend({
     html += '<path d="M 384 512 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512" fill="#3388ff"/>'
     html += '</svg>'
     const icon = L.divIcon({
-      className: 'boat',
       html: html,
+      className: 'boat',
+      iconSize: [25, 25],
       iconAnchor: [12.5, 12.5],
-      iconSize: [25, 25]
     })
     this.boat.setLatLng(e.latlng)
     this.boat.setIcon(icon)
