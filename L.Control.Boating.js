@@ -224,7 +224,8 @@ L.Control.Boating = L.Control.extend({
     const latlng = L.toDMS(e.latlng)
     const latitude = latlng.latDMS
     const longitude = latlng.lngDMS
-    const speed = Math.round(e.speed * 36 / 1.852) / 10 || 0
+    const nautic = 40000 / 360 / 60
+    const speed = Math.round(e.speed * 36 / nautic) / 10 || 0
     const heading = Math.round(e.heading) || Math.round(this.lastHeading) || '--'
     let html = '<table><tbody>'
     html += '<tr><td colspan="2" class="double">' + heading + ' °</td></tr>'
