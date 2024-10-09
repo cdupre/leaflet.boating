@@ -2,12 +2,12 @@
 
 ## Usage
 Include the CSS and JavaScript files
-```
+```html
 <link rel="stylesheet" href="//PATH/TO/L.Control.Boating.css" />
 <script src="//PATH/TO/L.Control.Boating.js"></script>
 ```
 Add the following snippet to your map initialization
-```
+```js
 L.control.boating().addTo(map)
 ```
 Leaflet.Boating is extended from leaflet Control. See [documentation](https://leafletjs.com/reference.html#control) for options and methods
