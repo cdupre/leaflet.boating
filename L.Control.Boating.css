@@ -1,0 +1,39 @@
+.leaflet-control-boating-arrow {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin: 7px;
+  background-image: url('data:image/svg+xml;charset=UTF-8,<svg transform="rotate(45)" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="M 384 512 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512" fill="black"/></svg>');
+}
+.leaflet-control-boating-arrow.requesting {
+  background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="black" d="M304 48a48 48 0 1 1-96 0 48 48 0 0 1 96 0zm-48 368a48 48 0 1 0 0 96 48 48 0 0 0 0-96zm208-208a48 48 0 1 0 0 96 48 48 0 0 0 0-96zM96 256a48 48 0 1 0-96 0 48 48 0 0 0 96 0zm13 99a48 48 0 1 0 0 96 48 48 0 0 0 0-96zm294 0a48 48 0 1 0 0 96 48 48 0 0 0 0-96zM109 61a48 48 0 1 0 0 96 48 48 0 0 0 0-96z"/></svg>');
+  animation: spin 2s linear infinite;
+}
+.leaflet-control-boating-arrow.locating {
+  background-image: url('data:image/svg+xml;charset=UTF-8,<svg transform="rotate(45)" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="M 384 512 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512" fill="rgb(51, 136, 255)"/></svg>');
+}
+.leaflet-control-boating-arrow.following {
+  background-image: url('data:image/svg+xml;charset=UTF-8,<svg transform="rotate(45)" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="M 384 512 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512" fill="rgb(252, 132, 40)"/></svg>');
+}
+.leaflet-control-boating-legend {
+  padding: 5px 8px;
+  background: white;
+}
+.leaflet-control-boating-legend th {
+  font-weight: normal;
+  color: rgb(0, 0, 0, .7);
+}
+.leaflet-control-boating-legend td {
+  text-align: center;
+}
+.leaflet-control-boating-legend td.double {
+  font-size: large;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
