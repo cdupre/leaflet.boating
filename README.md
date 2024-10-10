@@ -21,6 +21,12 @@ L.control.boating().addTo(map)
 ```
 Leaflet.Boating is extended from Leaflet Control. See [documentation](https://leafletjs.com/reference.html#control) for options and methods
 
+## Screenshot
+
+<div align="center">
+  <img width="66%" src="./screenshot.png">
+</div>
+
 ## License
 
 [MIT](./LICENSE.md)
