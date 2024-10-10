@@ -24,7 +24,7 @@ Leaflet.Boating is extended from Leaflet Control. See [documentation](https://le
 ## Screenshot
 
 <div align="center">
-  <img width="66%" src="./screenshot.png">
+  <img src="./screenshot.png">
 </div>
 
 ## License
