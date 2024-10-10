@@ -1,6 +1,6 @@
 # Leaflet.Boating
 
-A useful control to geolocate the user showing his direction, speed and location as a simple boating app
+A useful control to geolocate the user showing his heading, speed and location as a simple boating app
 
 Tested with [Leaflet](http://leafletjs.com/) 1.9.2 in Firefox and Chrome
 
