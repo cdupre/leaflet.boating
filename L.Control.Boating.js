@@ -1,4 +1,4 @@
-L.toDMS = function(latlng) {
+L.toDMS = function (latlng) {
   for (const i of ['lat', 'lng']) {
     let float = Math.abs(latlng[i])
     let d = Math.floor(float)
@@ -238,6 +238,6 @@ L.Control.Boating = L.Control.extend({
   },
 })
 
-L.control.boating = function(options) {
+L.control.boating = function (options) {
   return new L.Control.Boating(options)
 }
