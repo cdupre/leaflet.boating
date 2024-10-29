@@ -6,7 +6,7 @@ Tested with Leaflet 1.9.2 in Firefox and Chrome
 
 ## Demo
 
-[online demo](https://cdupre.github.io/leaflet.boating/demo/)
+[online demo](https://cdupre.github.io/leaflet.boating/)
 
 ## Usage
 
@@ -29,4 +29,4 @@ Leaflet.Boating is extended from Leaflet Control. See [documentation](https://le
 
 ## License
 
-[MIT](./LICENSE.md)
+[MIT](./LICENSE)
