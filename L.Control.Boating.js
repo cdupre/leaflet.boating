@@ -88,7 +88,8 @@ L.Control.Boating = L.Control.extend({
   onClick() {
     if (this.isFollowing()) {
       this.stop()
-    } else {
+    }
+    else {
       this.follow()
     }
   },
@@ -98,7 +99,6 @@ L.Control.Boating = L.Control.extend({
       this.unfollow()
     }
   },
-
 
   onMoveEnd() {
     if (this.isLocating() || this.isFollowing()) {
@@ -113,7 +113,8 @@ L.Control.Boating = L.Control.extend({
       this._map.panTo(this.lastPosition.latlng)
       this.icon.classList.remove('locating')
       this.icon.classList.add('following')
-    } else {
+    }
+    else {
       this._map.on('moveend', this.onMoveEnd, this)
       this._map.on('dragstart', this.onDragStart, this)
       this._map.on('locationfound', this.onLocationFound, this)
