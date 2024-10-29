@@ -161,14 +161,14 @@ L.Control.Boating = L.Control.extend({
     if (this.isFollowing()) {
       this._map.panTo(e.latlng)
     }
-    this.updateBoat(e)
-    this.updateLine(e)
-    this.updateLegend(e)
-    this.updateCircle(e)
     this.lastPosition = e
     if (e.heading) {
       this.lastHeading = e.heading
     }
+    this.updateLegend(e)
+    this.updateCircle(e)
+    this.updateBoat(e)
+    this.updateLine(e)
   },
 
   onLocationError(e) {
@@ -180,28 +180,28 @@ L.Control.Boating = L.Control.extend({
   },
 
   updateCircle(e) {
-    this.circle.setRadius(e.accuracy)
     this.circle.setLatLng(e.latlng)
+    this.circle.setRadius(e.accuracy)
   },
 
   updateBoat(e) {
     const heading = e.heading || this.lastHeading || 0
     let html = '<svg transform="rotate(' + heading + ')" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">'
-    html += '<path d="M 384 512 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512" fill="#3388ff"/>'
-    html += '</svg>'
-    const icon = L.divIcon({
-      html: html,
-      className: 'boat',
-      iconSize: [25, 25],
-      iconAnchor: [12.5, 12.5],
-    })
+    html += '<path d="M 384 512 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512" fill="#3388ff"/></svg>'
     this.boat.setLatLng(e.latlng)
-    this.boat.setIcon(icon)
+    this.boat.setIcon( L.divIcon({
+      iconAnchor: [12.5, 12.5],
+      iconSize: [25, 25],
+      className: 'boat',
+      html: html,
+    }))
   },
 
   updateLine(e = this.lastPosition) {
     if (e) {
       const heading = e.heading || this.lastHeading || 0
+      const cosDeg = (deg) => Math.cos(deg * Math.PI / 180)
+      const sinDeg = (deg) => Math.sin(deg * Math.PI / 180)
       const mapBounds = this._map.getBounds()
       const length = Math.max(
         mapBounds.getNorthWest().distanceTo(e.latlng),
@@ -210,13 +210,10 @@ L.Control.Boating = L.Control.extend({
         mapBounds.getSouthWest().distanceTo(e.latlng),
       )
       const lengthDeg = length * 360 / 40000000
-      const cosDeg = (deg) => Math.cos(deg * Math.PI / 180)
-      const sinDeg = (deg) => Math.sin(deg * Math.PI / 180)
-      const targetPoint = L.latLng(
+      this.line.setLatLngs([e.latlng, L.latLng(
         e.latlng.lat + (lengthDeg * cosDeg(heading)),
         e.latlng.lng + (lengthDeg * sinDeg(heading) / cosDeg(e.latlng.lat)),
-      )
-      this.line.setLatLngs([e.latlng, targetPoint])
+      )])
     }
   },
 
