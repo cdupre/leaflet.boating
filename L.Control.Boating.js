@@ -162,14 +162,14 @@ L.Control.Boating = L.Control.extend({
     if (this.isFollowing()) {
       this._map.panTo(e.latlng)
     }
-    this.lastPosition = e
-    if (e.heading) {
-      this.lastHeading = e.heading
-    }
     this.updateLegend(e)
     this.updateCircle(e)
     this.updateBoat(e)
     this.updateLine(e)
+    this.lastPosition = e
+    if (e.heading) {
+      this.lastHeading = e.heading
+    }
   },
 
   onLocationError(e) {
