@@ -1,58 +1,27 @@
-L.toDMS = function (latlng) {
-  for (const i of ['lat', 'lng']) {
-    let float = Math.abs(latlng[i])
-    let d = Math.floor(float)
-    float = (float - d) * 60
-    let m = Math.floor(float)
-    float = (float - m) * 60
-    let s = Math.round(float)
-    let pol
-    if (s === 60) {
-      m++
-      s = 0
-    }
-    if (m === 60) {
-      d++
-      m = 0
-    }
-    if (s < 10) {
-      s = '0' + s
-    }
-    if (m < 10) {
-      m = '0' + m
-    }
-    if (i === 'lat') {
-      pol = (latlng[i] > 0) ? 'N' : 'S'
-    }
-    if (i === 'lng') {
-      pol = (latlng[i] > 0) ? 'W' : 'E'
-    }
-    latlng[i + 'DMS'] = d + '&deg; ' + m + '\' ' + s + '" ' + pol
-  }
-  return latlng
-}
-
 L.Control.Boating = L.Control.extend({
+
   options: {
-    position: "topleft",
+    position: 'topleft',
   },
-  onAdd(map) {
+
+  onAdd: function (map) {
     const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control')
     const link = L.DomUtil.create('a', 'leaflet-bar-part leaflet-bar-part-single', container)
-    link.href = '#'
-    link.setAttribute('role', 'button')
     this.icon = L.DomUtil.create('span', 'leaflet-control-boating-arrow', link)
+    link.href = '#'
 
-    L.DomEvent.on(
-      link,
-      'click',
-      function (ev) {
-        L.DomEvent.stopPropagation(ev)
-        L.DomEvent.preventDefault(ev)
-        this.onClick()
-      },
-      this
-    ).on(link, 'dblclick', L.DomEvent.stopPropagation)
+    L.DomEvent.on(link, 'dblclick', L.DomEvent.stopPropagation, this)
+    L.DomEvent.on(link, 'click', function (ev) {
+      L.DomEvent.stopPropagation(ev)
+      L.DomEvent.preventDefault(ev)
+      this.onClick()
+    }, this)
+
+    this.legend = L.control({position: 'bottomright'})
+    this.legend.onAdd = function (map) {
+      this.container = L.DomUtil.create('div', 'leaflet-control leaflet-bar leaflet-control-boating-legend')
+      return this.container
+    }
 
     this.circle = L.circle([0, 0], {
       stroke: false,
@@ -64,28 +33,22 @@ L.Control.Boating = L.Control.extend({
 
     this.boat = L.marker([0, 0])
 
-    this.legend = L.control({position: 'bottomright'})
-    this.legend.onAdd = function (map) {
-      this.legendContent = L.DomUtil.create('div', 'leaflet-control leaflet-bar leaflet-control-boating-legend')
-      return this.legendContent
-    }
-
     return container
   },
 
-  isRequesting() {
+  isRequesting: function () {
     return this.icon.classList.contains('requesting')
   },
 
-  isLocating() {
+  isLocating: function () {
     return this.icon.classList.contains('locating')
   },
 
-  isFollowing() {
+  isFollowing: function () {
     return this.icon.classList.contains('following')
   },
 
-  onClick() {
+  onClick: function () {
     if (this.isFollowing()) {
       this.stop()
     }
@@ -94,19 +57,21 @@ L.Control.Boating = L.Control.extend({
     }
   },
 
-  onDragStart() {
+  onDragStart: function () {
     if (this.isFollowing()) {
       this.unfollow()
     }
   },
 
-  onMoveEnd() {
+  onMoveEnd: function () {
     if (this.isLocating() || this.isFollowing()) {
-      this.updateLine()
+      if (this.lastPosition) {
+        this.updateLine(this.lastPosition)
+      }
     }
   },
 
-  follow() {
+  follow: function () {
     if (this.isLocating()) {
       this._map.options.scrollWheelZoom = 'center'
       this._map.options.doubleClickZoom = 'center'
@@ -124,14 +89,14 @@ L.Control.Boating = L.Control.extend({
     }
   },
 
-  unfollow() {
+  unfollow: function () {
     this._map.options.scrollWheelZoom = true
     this._map.options.doubleClickZoom = true
     this.icon.classList.remove('following')
     this.icon.classList.add('locating')
   },
 
-  stop() {
+  stop: function () {
     this._map.stopLocate()
     this._map.off('moveend', this.onMoveEnd, this)
     this._map.off('dragstart', this.onDragStart, this)
@@ -148,7 +113,7 @@ L.Control.Boating = L.Control.extend({
     this._map.removeLayer(this.boat)
   },
 
-  onLocationFound(e) {
+  onLocationFound: function (e) {
     if (this.isRequesting()) {
       this._map.options.scrollWheelZoom = 'center'
       this._map.options.doubleClickZoom = 'center'
@@ -166,6 +131,7 @@ L.Control.Boating = L.Control.extend({
     this.updateCircle(e)
     this.updateBoat(e)
     this.updateLine(e)
+
     this.lastPosition = e
     if (e.heading) {
       this.lastHeading = e.heading
@@ -198,28 +164,26 @@ L.Control.Boating = L.Control.extend({
     }))
   },
 
-  updateLine(e = this.lastPosition) {
-    if (e) {
-      const heading = e.heading || this.lastHeading || 0
-      const cosDeg = (deg) => Math.cos(deg * Math.PI / 180)
-      const sinDeg = (deg) => Math.sin(deg * Math.PI / 180)
-      const mapBounds = this._map.getBounds()
-      const length = Math.max(
-        mapBounds.getNorthWest().distanceTo(e.latlng),
-        mapBounds.getNorthEast().distanceTo(e.latlng),
-        mapBounds.getSouthEast().distanceTo(e.latlng),
-        mapBounds.getSouthWest().distanceTo(e.latlng),
-      )
-      const lengthDeg = length * 360 / 40000000
-      this.line.setLatLngs([e.latlng, L.latLng(
-        e.latlng.lat + (lengthDeg * cosDeg(heading)),
-        e.latlng.lng + (lengthDeg * sinDeg(heading) / cosDeg(e.latlng.lat)),
-      )])
-    }
+  updateLine(e) {
+    const heading = e.heading || this.lastHeading || 0
+    const cosDeg = (deg) => Math.cos(deg * Math.PI / 180)
+    const sinDeg = (deg) => Math.sin(deg * Math.PI / 180)
+    const mapBounds = this._map.getBounds()
+    const length = Math.max(
+      mapBounds.getNorthWest().distanceTo(e.latlng),
+      mapBounds.getNorthEast().distanceTo(e.latlng),
+      mapBounds.getSouthEast().distanceTo(e.latlng),
+      mapBounds.getSouthWest().distanceTo(e.latlng),
+    )
+    const lengthDeg = length * 360 / 40000000
+    this.line.setLatLngs([e.latlng, L.latLng(
+      e.latlng.lat + (lengthDeg * cosDeg(heading)),
+      e.latlng.lng + (lengthDeg * sinDeg(heading) / cosDeg(e.latlng.lat)),
+    )])
   },
 
   updateLegend(e) {
-    const latlng = L.toDMS(e.latlng)
+    const latlng = this.addDMS(e.latlng)
     const latitude = latlng.latDMS
     const longitude = latlng.lngDMS
     const nautic = 40000 / 360 / 60
@@ -231,7 +195,41 @@ L.Control.Boating = L.Control.extend({
     html += '<tr><th>lat</th><td>' + latitude + '</td></tr>'
     html += '<tr><th>lon</th><td>' + longitude + '</td></tr>'
     html += '</tbody></table>'
-    this.legend.legendContent.innerHTML = html
+    this.legend.container.innerHTML = html
+  },
+
+  addDMS: function (latlng) {
+    for (const i of ['lat', 'lng']) {
+      let float = Math.abs(latlng[i])
+      let d = Math.floor(float)
+      float = (float - d) * 60
+      let m = Math.floor(float)
+      float = (float - m) * 60
+      let s = Math.round(float)
+      let pol
+      if (s === 60) {
+        m++
+        s = 0
+      }
+      if (m === 60) {
+        d++
+        m = 0
+      }
+      if (s < 10) {
+        s = '0' + s
+      }
+      if (m < 10) {
+        m = '0' + m
+      }
+      if (i === 'lat') {
+        pol = (latlng[i] > 0) ? 'N' : 'S'
+      }
+      if (i === 'lng') {
+        pol = (latlng[i] > 0) ? 'W' : 'E'
+      }
+      latlng[i + 'DMS'] = d + '&deg; ' + m + '\' ' + s + '" ' + pol
+    }
+    return latlng
   },
 })
 
