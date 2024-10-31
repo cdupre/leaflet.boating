@@ -138,7 +138,7 @@ L.Control.Boating = L.Control.extend({
     }
   },
 
-  onLocationError(e) {
+  onLocationError: function (e) {
     console.error(e)
     if (e.code === 1) {
       alert('unlock geolocation please')
@@ -146,12 +146,12 @@ L.Control.Boating = L.Control.extend({
     }
   },
 
-  updateCircle(e) {
+  updateCircle: function (e) {
     this.circle.setLatLng(e.latlng)
     this.circle.setRadius(e.accuracy)
   },
 
-  updateBoat(e) {
+  updateBoat: function (e) {
     const heading = e.heading || this.lastHeading || 0
     let html = '<svg transform="rotate(' + heading + ')" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">'
     html += '<path d="M 384 512 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512" fill="#3388ff"/></svg>'
@@ -164,7 +164,7 @@ L.Control.Boating = L.Control.extend({
     }))
   },
 
-  updateLine(e) {
+  updateLine: function (e) {
     const heading = e.heading || this.lastHeading || 0
     const cosDeg = (deg) => Math.cos(deg * Math.PI / 180)
     const sinDeg = (deg) => Math.sin(deg * Math.PI / 180)
@@ -182,7 +182,7 @@ L.Control.Boating = L.Control.extend({
     )])
   },
 
-  updateLegend(e) {
+  updateLegend: function (e) {
     const latlng = this.addDMS(e.latlng)
     const latitude = latlng.latDMS
     const longitude = latlng.lngDMS
