@@ -1,12 +1,7 @@
 # Leaflet.Boating
 
-A simple [Leaflet](http://leafletjs.com/) plugin to geolocate the user and display heading, speed and location like a simple navigation app
-
+A [Leaflet](http://leafletjs.com/) plugin to geolocate the user and display heading, speed and location like a simple navigation app  
 Tested with Leaflet 1.9.2 in Firefox and Chrome
-
-## Demo
-
-[online demo](https://cdupre.github.io/leaflet.boating/)
 
 ## Usage
 
@@ -20,6 +15,11 @@ Add the following snippet to your map initialization
 L.control.boating().addTo(map)
 ```
 Leaflet.Boating is extended from Leaflet Control. See [documentation](https://leafletjs.com/reference.html#control) for options and methods
+
+## Demo
+
+For an example case, see the file `index.html`  
+For more, see the [online demo](https://cdupre.github.io/leaflet.boating)
 
 ## Screenshot
 
