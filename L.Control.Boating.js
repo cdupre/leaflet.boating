@@ -2,6 +2,7 @@ L.Control.Boating = L.Control.extend({
 
   options: {
     position: 'topleft',
+    legendPosition: 'bottomright',
   },
 
   onAdd: function (map) {
@@ -17,7 +18,7 @@ L.Control.Boating = L.Control.extend({
       this.onClick()
     }, this)
 
-    this.legend = L.control({position: 'bottomright'})
+    this.legend = L.control({position: this.options.legendPosition})
     this.legend.onAdd = function (map) {
       this.container = L.DomUtil.create('div', 'leaflet-control leaflet-bar leaflet-control-boating-legend')
       return this.container
@@ -52,8 +53,12 @@ L.Control.Boating = L.Control.extend({
     if (this.isFollowing()) {
       this.stop()
     }
-    else {
+    else if (this.isLocating()) {
+      this._map.panTo(this.lastPosition.latlng)
       this.follow()
+    }
+    else if (!this.isRequesting()) {
+      this.request()
     }
   },
 
@@ -64,34 +69,34 @@ L.Control.Boating = L.Control.extend({
   },
 
   onMoveEnd: function () {
-    if (this.isLocating() || this.isFollowing()) {
-      if (this.lastPosition) {
-        this.updateLine(this.lastPosition)
-      }
+    if ((this.isLocating() || this.isFollowing()) && this.lastPosition) {
+      this.updateLine(this.lastPosition)
     }
   },
 
+  request: function () {
+    this._map.on('moveend', this.onMoveEnd, this)
+    this._map.on('dragstart', this.onDragStart, this)
+    this._map.on('locationfound', this.onLocationFound, this)
+    this._map.on('locationerror', this.onLocationError, this)
+    this._map.locate({watch: true, enableHighAccuracy: true})
+    this.icon.classList.remove('following')
+    this.icon.classList.remove('locating')
+    this.icon.classList.add('requesting')
+  },
+
   follow: function () {
-    if (this.isLocating()) {
-      this._map.options.scrollWheelZoom = 'center'
-      this._map.options.doubleClickZoom = 'center'
-      this._map.panTo(this.lastPosition.latlng)
-      this.icon.classList.remove('locating')
-      this.icon.classList.add('following')
-    }
-    else {
-      this._map.on('moveend', this.onMoveEnd, this)
-      this._map.on('dragstart', this.onDragStart, this)
-      this._map.on('locationfound', this.onLocationFound, this)
-      this._map.on('locationerror', this.onLocationError, this)
-      this._map.locate({watch: true, enableHighAccuracy: true})
-      this.icon.classList.add('requesting')
-    }
+    this._map.options.scrollWheelZoom = 'center'
+    this._map.options.doubleClickZoom = 'center'
+    this.icon.classList.remove('requesting')
+    this.icon.classList.remove('locating')
+    this.icon.classList.add('following')
   },
 
   unfollow: function () {
     this._map.options.scrollWheelZoom = true
     this._map.options.doubleClickZoom = true
+    this.icon.classList.remove('requesting')
     this.icon.classList.remove('following')
     this.icon.classList.add('locating')
   },
@@ -115,14 +120,11 @@ L.Control.Boating = L.Control.extend({
 
   onLocationFound: function (e) {
     if (this.isRequesting()) {
-      this._map.options.scrollWheelZoom = 'center'
-      this._map.options.doubleClickZoom = 'center'
-      this.icon.classList.remove('requesting')
-      this.icon.classList.add('following')
       this._map.addControl(this.legend)
       this._map.addLayer(this.circle)
       this._map.addLayer(this.line)
       this._map.addLayer(this.boat)
+      this.follow()
     }
     if (this.isFollowing()) {
       this._map.panTo(e.latlng)
