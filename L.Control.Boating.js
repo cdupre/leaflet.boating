@@ -29,7 +29,12 @@ L.Control.Boating = L.Control.extend({
     })
 
     this.line = L.polyline([[0, 0], [0, 0]], {
-      opacity: .4,
+      opacity: .5,
+    })
+
+    this.linebg = L.polyline([[0, 0], [0, 0]], {
+      color: 'white',
+      opacity: .5,
     })
 
     this.boat = L.marker([0, 0])
@@ -114,6 +119,7 @@ L.Control.Boating = L.Control.extend({
     this.icon.classList.remove('locating')
     this._map.removeControl(this.legend)
     this._map.removeLayer(this.circle)
+    this._map.removeLayer(this.linebg)
     this._map.removeLayer(this.line)
     this._map.removeLayer(this.boat)
   },
@@ -122,6 +128,7 @@ L.Control.Boating = L.Control.extend({
     if (this.isRequesting()) {
       this._map.addControl(this.legend)
       this._map.addLayer(this.circle)
+      this._map.addLayer(this.linebg)
       this._map.addLayer(this.line)
       this._map.addLayer(this.boat)
       this.follow()
@@ -167,10 +174,15 @@ L.Control.Boating = L.Control.extend({
   },
 
   updateLine: function (e) {
-    const heading = e.heading || this.lastHeading || 0
+    console.log('à revoir, triggered 2 fois par geoloc quand c\'est en following')
+    
+    const zoom = this._map.getZoom()
+    const mapBounds = this._map.getBounds()
     const cosDeg = (deg) => Math.cos(deg * Math.PI / 180)
     const sinDeg = (deg) => Math.sin(deg * Math.PI / 180)
-    const mapBounds = this._map.getBounds()
+    const heading = e.heading || this.lastHeading || 0
+    const speed = e.speed || 0
+
     const length = Math.max(
       mapBounds.getNorthWest().distanceTo(e.latlng),
       mapBounds.getNorthEast().distanceTo(e.latlng),
@@ -178,10 +190,16 @@ L.Control.Boating = L.Control.extend({
       mapBounds.getSouthWest().distanceTo(e.latlng),
     )
     const lengthDeg = length * 360 / 40000000
-    this.line.setLatLngs([e.latlng, L.latLng(
+    const dirPoint = L.latLng(
       e.latlng.lat + (lengthDeg * cosDeg(heading)),
       e.latlng.lng + (lengthDeg * sinDeg(heading) / cosDeg(e.latlng.lat)),
-    )])
+    )
+    this.line.setLatLngs([e.latlng, dirPoint])
+    this.linebg.setLatLngs([e.latlng, dirPoint])
+
+    const metersPerPixel = 40000000 * cosDeg(e.latlng.lat) / (256 * Math.pow(2, zoom))
+    const pixelsPerHour = speed / metersPerPixel * 3600
+    this.line.setStyle({ dashArray: pixelsPerHour + ',' + pixelsPerHour })
   },
 
   updateLegend: function (e) {
