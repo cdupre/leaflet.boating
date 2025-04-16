@@ -29,11 +29,11 @@ L.Control.Boating = L.Control.extend({
     })
 
     this.line = L.polyline([[0, 0], [0, 0]], {
-      opacity: .8,
+      lineCap: 'square',
     })
 
     this.linebg = L.polyline([[0, 0], [0, 0]], {
-      opacity: .4,
+      color: 'white',
     })
 
     this.boat = L.marker([0, 0])
@@ -174,7 +174,7 @@ L.Control.Boating = L.Control.extend({
 
   updateLine: function (e) {
     console.log('à revoir, triggered 2 fois par geoloc quand c\'est en following')
-    
+
     const zoom = this._map.getZoom()
     const mapBounds = this._map.getBounds()
     const cosDeg = (deg) => Math.cos(deg * Math.PI / 180)
