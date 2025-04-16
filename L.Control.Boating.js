@@ -18,7 +18,7 @@ L.Control.Boating = L.Control.extend({
       this.onClick()
     }, this)
 
-    this.legend = L.control({position: this.options.legendPosition})
+    this.legend = L.control({ position: this.options.legendPosition })
     this.legend.onAdd = function (map) {
       this.container = L.DomUtil.create('div', 'leaflet-control leaflet-bar leaflet-control-boating-legend')
       return this.container
@@ -83,7 +83,7 @@ L.Control.Boating = L.Control.extend({
     this._map.on('dragstart', this.onDragStart, this)
     this._map.on('locationfound', this.onLocationFound, this)
     this._map.on('locationerror', this.onLocationError, this)
-    this._map.locate({watch: true, enableHighAccuracy: true})
+    this._map.locate({ watch: true, enableHighAccuracy: true })
     this.icon.classList.remove('following')
     this.icon.classList.remove('locating')
     this.icon.classList.add('requesting')
@@ -135,11 +135,9 @@ L.Control.Boating = L.Control.extend({
     if (this.isFollowing()) {
       this._map.panTo(e.latlng)
     }
-    else {
-      this.updateLine(e)
-    }
     this.updateLegend(e)
     this.updateCircle(e)
+    this.updateLine(e)
     this.updateBoat(e)
 
     this.lastPosition = e
