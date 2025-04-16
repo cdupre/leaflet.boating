@@ -29,12 +29,11 @@ L.Control.Boating = L.Control.extend({
     })
 
     this.line = L.polyline([[0, 0], [0, 0]], {
-      opacity: .5,
+      opacity: .8,
     })
 
     this.linebg = L.polyline([[0, 0], [0, 0]], {
-      color: 'white',
-      opacity: .5,
+      opacity: .4,
     })
 
     this.boat = L.marker([0, 0])
@@ -198,8 +197,11 @@ L.Control.Boating = L.Control.extend({
     this.linebg.setLatLngs([e.latlng, dirPoint])
 
     const metersPerPixel = 40000000 * cosDeg(e.latlng.lat) / (256 * Math.pow(2, zoom))
-    const pixelsPerHour = speed / metersPerPixel * 3600
-    this.line.setStyle({ dashArray: pixelsPerHour + ',' + pixelsPerHour })
+    const pixelsPerHalfHour = speed / metersPerPixel * 1800
+    this.line.setStyle({
+      dashArray: pixelsPerHalfHour + ',' + pixelsPerHalfHour,
+      dashOffset: pixelsPerHalfHour,
+    })
   },
 
   updateLegend: function (e) {
