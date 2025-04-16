@@ -135,10 +135,12 @@ L.Control.Boating = L.Control.extend({
     if (this.isFollowing()) {
       this._map.panTo(e.latlng)
     }
+    else {
+      this.updateLine(e)
+    }
     this.updateLegend(e)
     this.updateCircle(e)
     this.updateBoat(e)
-    this.updateLine(e)
 
     this.lastPosition = e
     if (e.heading) {
@@ -173,8 +175,6 @@ L.Control.Boating = L.Control.extend({
   },
 
   updateLine: function (e) {
-    console.log('à revoir, triggered 2 fois par geoloc quand c\'est en following')
-
     const zoom = this._map.getZoom()
     const mapBounds = this._map.getBounds()
     const cosDeg = (deg) => Math.cos(deg * Math.PI / 180)
