@@ -12,9 +12,9 @@ L.Control.Boating = L.Control.extend({
     link.href = '#'
 
     L.DomEvent.on(link, 'dblclick', L.DomEvent.stopPropagation, this)
-    L.DomEvent.on(link, 'click', function (ev) {
-      L.DomEvent.stopPropagation(ev)
-      L.DomEvent.preventDefault(ev)
+    L.DomEvent.on(link, 'click', function (e) {
+      L.DomEvent.stopPropagation(e)
+      L.DomEvent.preventDefault(e)
       this.onClick()
     }, this)
 
