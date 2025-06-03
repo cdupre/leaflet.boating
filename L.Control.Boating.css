@@ -10,9 +10,6 @@
 .leaflet-control-boating-arrow.locating {
   background-image: url(assets/icon.locating.svg);
 }
-.leaflet-control-boating-arrow.locating:hover {
-  background-image: url(assets/icon.following.svg);
-}
 .leaflet-control-boating-arrow.requesting {
   background-image: url(assets/icon.requesting.svg);
   animation: spin 2s linear infinite;
