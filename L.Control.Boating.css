@@ -36,3 +36,7 @@
     transform: rotate(360deg);
   }
 }
+body::after { /* Preloading icons */
+  position:absolute; width:0; height:0; overflow:hidden; z-index:-1;
+  content:url(assets/icon.svg) url(assets/icon.locating.svg) url(assets/icon.following.svg) url(assets/icon.requesting.svg);
+}
