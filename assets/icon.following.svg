@@ -1,0 +1,9 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(256 256) scale(0.5) rotate(45) translate(-256 -256)">
+    <path d="M 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512 Z" fill="#3388ff"/>
+  </g>
+  <path d="M 60 160 L 60 80 A 20 20 0 0 1 80 60 L 160 60" stroke="#3388ff" stroke-width="20" fill="none"/>
+  <path d="M 352 60 L 432 60 A 20 20 0 0 1 452 80 L 452 160" stroke="#3388ff" stroke-width="20" fill="none"/>
+  <path d="M 452 352 L 452 432 A 20 20 0 0 1 432 452 L 352 452" stroke="#3388ff" stroke-width="20" fill="none"/>
+  <path d="M 160 452 L 80 452 A 20 20 0 0 1 60 432 L 60 352" stroke="#3388ff" stroke-width="20" fill="none"/>
+</svg>

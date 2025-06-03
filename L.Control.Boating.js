@@ -11,7 +11,6 @@ L.Control.Boating = L.Control.extend({
     this.icon = L.DomUtil.create('span', 'leaflet-control-boating-arrow', link)
     link.href = '#'
 
-    L.DomEvent.on(link, 'dblclick', L.DomEvent.stopPropagation, this)
     L.DomEvent.on(link, 'click', function (e) {
       L.DomEvent.stopPropagation(e)
       L.DomEvent.preventDefault(e)
@@ -33,7 +32,7 @@ L.Control.Boating = L.Control.extend({
     })
 
     this.linebg = L.polyline([[0, 0], [0, 0]], {
-      color: 'white',
+      color: 'gold',
     })
 
     this.boat = L.marker([0, 0])
@@ -161,15 +160,17 @@ L.Control.Boating = L.Control.extend({
 
   updateBoat: function (e) {
     const heading = e.heading || this.lastHeading || 0
-    let html = '<svg transform="rotate(' + heading + ')" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">'
-    html += '<path d="M 384 512 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512" fill="#3388ff"/></svg>'
+    let svg = '<svg transform="rotate(' + heading + ')" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">'
+    svg += '<path d="M 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512 Z" fill="#3388ff"/></svg>'
     this.boat.setLatLng(e.latlng)
-    this.boat.setIcon( L.divIcon({
-      iconAnchor: [12.5, 12.5],
-      iconSize: [25, 25],
-      className: 'boat',
-      html: html,
-    }))
+    this.boat.setIcon(
+      L.divIcon({
+        iconAnchor: [12.5, 12.5],
+        iconSize: [25, 25],
+        className: 'boat',
+        html: svg,
+      })
+    )
   },
 
   updateLine: function (e) {
@@ -195,7 +196,7 @@ L.Control.Boating = L.Control.extend({
     this.linebg.setLatLngs([e.latlng, dirPoint])
 
     const metersPerPixel = 40000000 * cosDeg(e.latlng.lat) / (256 * Math.pow(2, zoom))
-    const pixelsPerHalfHour = speed / metersPerPixel * 1800
+    const pixelsPerHalfHour = speed / metersPerPixel * 3600
     this.line.setStyle({
       dashArray: pixelsPerHalfHour + ',' + pixelsPerHalfHour,
       dashOffset: pixelsPerHalfHour,
