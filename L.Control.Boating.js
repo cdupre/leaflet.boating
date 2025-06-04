@@ -215,6 +215,8 @@ L.Control.Boating = L.Control.extend({
     html += '<tr><td colspan="2" class="double">' + speed + ' kts</td></tr>'
     html += '<tr><th>lat</th><td>' + latitude + '</td></tr>'
     html += '<tr><th>lon</th><td>' + longitude + '</td></tr>'
+    html += '<tr><td colspan="2"><div class="gold"></div><div class="blue"></div></td></tr>'
+    html += '<tr><td colspan="2"><div class="hours"><div>0</div><div>1h</div><div>2h</div></div></td></tr>'
     html += '</tbody></table>'
     this.legend.container.innerHTML = html
   },
