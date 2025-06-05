@@ -220,7 +220,7 @@ L.Control.Boating = L.Control.extend({
     html += '<tr><td colspan="2" class="double">' + heading + ' °</td></tr>'
     html += '<tr><td colspan="2" class="double">' + speed + ' kts</td></tr>'
     html += '<tr><th>lat</th><td>' + e.latlngDMS.lat + '</td></tr>'
-    html += '<tr><th>lon</th><td>' + e.latlngDMS.lat + '</td></tr>'
+    html += '<tr><th>lon</th><td>' + e.latlngDMS.lng + '</td></tr>'
     html += '<tr><td colspan="2"><div class="gold"></div><div class="blue"></div></td></tr>'
     html += '<tr><td colspan="2"><div class="hours"><div>0</div><div>1h</div><div>2h</div></div></td></tr>'
     html += '</tbody></table>'
@@ -277,7 +277,7 @@ L.Control.Boating = L.Control.extend({
         }, { sumX: 0, sumY: 0 }
       )
       return {
-        speed: Math.sqrt(Math.pow(sumX, 2) + Math.pow(sumY, 2)) / nb,
+        speed: Math.sqrt(Math.pow(sumX, 2) + Math.pow(sumY, 2)) / cache.length,
         heading: atan2Deg(sumY, sumX),
       }
     }
