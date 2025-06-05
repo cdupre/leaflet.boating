@@ -1,3 +1,15 @@
+function cosDeg(deg) {
+  return Math.cos(deg * Math.PI / 180)
+}
+
+function sinDeg(deg) {
+  return Math.sin(deg * Math.PI / 180)
+}
+
+function atan2Deg(x, y) {
+  return ((Math.atan2(x, y) * 180 / Math.PI) + 360) % 360
+}
+
 L.Control.Boating = L.Control.extend({
 
   options: {
@@ -123,6 +135,15 @@ L.Control.Boating = L.Control.extend({
   },
 
   onLocationFound: function (e) {
+
+    // e.speed = Math.random() * 10 // Simulate speed for testing
+    // e.heading = Math.random() * 360 // Simulate heading for testing
+
+    e.averageMotion = this.averageMotion(e)
+    e.latlngDMS = this.latlngDMS(e)
+
+    // console.log(e)
+
     if (this.isRequesting()) {
       this._map.addControl(this.legend)
       this._map.addLayer(this.circle)
@@ -139,10 +160,10 @@ L.Control.Boating = L.Control.extend({
     this.updateLine(e)
     this.updateBoat(e)
 
-    this.lastPosition = e
-    if (e.heading) {
-      this.lastHeading = e.heading
-    }
+    // this.lastPosition = e
+    // if (e.heading) {
+    //   this.lastHeading = e.heading
+    // }
   },
 
   onLocationError: function (e) {
@@ -159,7 +180,7 @@ L.Control.Boating = L.Control.extend({
   },
 
   updateBoat: function (e) {
-    const heading = e.heading || this.lastHeading || 0
+    const heading = e.averageMotion.heading || 0
     let svg = '<svg transform="rotate(' + heading + ')" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">'
     svg += '<path d="M 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512 Z" fill="#3388ff"/></svg>'
     this.boat.setLatLng(e.latlng)
@@ -176,10 +197,8 @@ L.Control.Boating = L.Control.extend({
   updateLine: function (e) {
     const zoom = this._map.getZoom()
     const mapBounds = this._map.getBounds()
-    const cosDeg = (deg) => Math.cos(deg * Math.PI / 180)
-    const sinDeg = (deg) => Math.sin(deg * Math.PI / 180)
-    const heading = e.heading || this.lastHeading || 0
-    const speed = e.speed || 0
+    const heading = e.averageMotion.heading || 0
+    const speed = e.averageMotion.speed || 0
 
     const length = Math.max(
       mapBounds.getNorthWest().distanceTo(e.latlng),
@@ -204,38 +223,34 @@ L.Control.Boating = L.Control.extend({
   },
 
   updateLegend: function (e) {
-    const latlng = this.addDMS(e.latlng)
-    const latitude = latlng.latDMS
-    const longitude = latlng.lngDMS
     const nautic = 40000 / 360 / 60
-    const speed = Math.round(e.speed * 36 / nautic) / 10 || 0
-    const heading = Math.round(e.heading) || Math.round(this.lastHeading) || '--'
+    const heading = Math.round(e.averageMotion.heading) || '--'
+    const speed = Math.round(e.averageMotion.speed * 36 / nautic) / 10 || 0
     let html = '<table><tbody>'
     html += '<tr><td colspan="2" class="double">' + heading + ' °</td></tr>'
     html += '<tr><td colspan="2" class="double">' + speed + ' kts</td></tr>'
-    html += '<tr><th>lat</th><td>' + latitude + '</td></tr>'
-    html += '<tr><th>lon</th><td>' + longitude + '</td></tr>'
+    html += '<tr><th>lat</th><td>' + e.latlngDMS.lat + '</td></tr>'
+    html += '<tr><th>lon</th><td>' + e.latlngDMS.lat + '</td></tr>'
     html += '<tr><td colspan="2"><div class="gold"></div><div class="blue"></div></td></tr>'
     html += '<tr><td colspan="2"><div class="hours"><div>0</div><div>1h</div><div>2h</div></div></td></tr>'
     html += '</tbody></table>'
     this.legend.container.innerHTML = html
   },
 
-  addDMS: function (latlng) {
-    for (const i of ['lat', 'lng']) {
-      let float = Math.abs(latlng[i])
+  latlngDMS: function (e) {
+    function dms(coord) {
+      let float = Math.abs(coord)
       let d = Math.floor(float)
       float = (float - d) * 60
       let m = Math.floor(float)
       float = (float - m) * 60
       let s = Math.round(float)
-      let pol
       if (s === 60) {
-        m++
+        m = m + 1
         s = 0
       }
       if (m === 60) {
-        d++
+        d = d + 1
         m = 0
       }
       if (s < 10) {
@@ -244,16 +259,39 @@ L.Control.Boating = L.Control.extend({
       if (m < 10) {
         m = '0' + m
       }
-      if (i === 'lat') {
-        pol = (latlng[i] > 0) ? 'N' : 'S'
-      }
-      if (i === 'lng') {
-        pol = (latlng[i] > 0) ? 'W' : 'E'
-      }
-      latlng[i + 'DMS'] = d + '&deg; ' + m + '\' ' + s + '" ' + pol
+      return d + '&deg; ' + m + '\' ' + s + '" '
     }
-    return latlng
+    return {
+      lat: dms(e.latlng.lat) + ((e.latlng.lat > 0) ? 'N' : 'S'),
+      lng: dms(e.latlng.lng) + ((e.latlng.lng > 0) ? 'E' : 'W'),
+    }
   },
+
+  averageMotion: (function () {
+    const cache = []
+    const nb = 3
+
+    return function(e) {
+      if (e.speed && e.heading) {
+        cache.push(e)
+        if (cache.length > nb) {
+          cache.shift()
+        }
+      }
+      const { sumX, sumY } = cache.reduce(
+        function ({ sumX, sumY }, e) {
+          return {
+            sumX: sumX + e.speed * cosDeg(e.heading),
+            sumY: sumY + e.speed * sinDeg(e.heading),
+          }
+        }, { sumX: 0, sumY: 0 }
+      )
+      return {
+        speed: Math.sqrt(sumX ** 2 + sumY ** 2),
+        heading: atan2Deg(sumY, sumX),
+      }
+    }
+  })(),
 })
 
 L.control.boating = function (options) {
