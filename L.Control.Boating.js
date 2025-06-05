@@ -137,6 +137,7 @@ L.Control.Boating = L.Control.extend({
   onLocationFound: function (e) {
     e.latlngDMS = this.latlngDMS(e)
     e.averageMotion = this.averageMotion(e)
+
     if (this.isRequesting()) {
       this._map.addControl(this.legend)
       this._map.addLayer(this.circle)
@@ -152,6 +153,7 @@ L.Control.Boating = L.Control.extend({
     this.updateCircle(e)
     this.updateLine(e)
     this.updateBoat(e)
+    this.lastPosition = e
   },
 
   onLocationError: function (e) {
