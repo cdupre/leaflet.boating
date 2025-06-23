@@ -50,8 +50,7 @@ L.Control.Boating = L.Control.extend({
               </td>
             </tr>
           </tbody>
-        </table>
-      `
+        </table>`
       this.lat = container.querySelector('#lat')
       this.lon = container.querySelector('#lon')
       this.knots = container.querySelector('#knots')
@@ -283,7 +282,7 @@ L.Control.Boating = L.Control.extend({
       if (m < 10) {
         m = '0' + m
       }
-      return d + '&deg; ' + m + '\' ' + s + '" '
+      return d + '&deg; ' + m + '&apos; ' + s + '&quot; '
     }
     return {
       lat: dms(e.latlng.lat) + ((e.latlng.lat > 0) ? 'N' : 'S'),
