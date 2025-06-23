@@ -29,10 +29,32 @@ L.Control.Boating = L.Control.extend({
       this.onClick()
     }, this)
 
+    const that = this
     this.legend = L.control({ position: this.options.legendPosition })
     this.legend.onAdd = function (map) {
-      this.container = L.DomUtil.create('div', 'leaflet-control leaflet-bar leaflet-control-boating-legend')
-      return this.container
+      const container = L.DomUtil.create('div', 'leaflet-control leaflet-bar leaflet-control-boating-legend')
+      let html = '<table><tbody>'
+      html += '<tr><td colspan="2" class="double" id="heading"></td></tr>'
+      html += '<tr><td colspan="2" class="double" id="knots"></td></tr>'
+      html += '<tr><th>lat</th><td id="lat"></td></tr>'
+      html += '<tr><th>lon</th><td id="lon">/td></tr>'
+      html += '<tr><th>'
+      html += '<input type="checkbox" id="checkbox">'
+      html += '</th><td class="label">'
+      html += '<label for="checkbox">'
+      html += '<div class="gold"></div><div class="blue"></div>'
+      html += '<div class="hours"><div>0</div><div>1h</div><div>2h</div></div>'
+      html += '</label>'
+      html += '</td></tr>'
+      html += '</tbody></table>'
+      container.innerHTML = html
+      this.lat = container.querySelector('#lat')
+      this.lon = container.querySelector('#lon')
+      this.knots = container.querySelector('#knots')
+      this.heading = container.querySelector('#heading')
+      const checkbox = container.querySelector('#checkbox')
+      L.DomEvent.on(checkbox, 'change', that.handleLegendCheckbox)
+      return container
     }
 
     this.circle = L.circle([0, 0], {
@@ -213,20 +235,17 @@ L.Control.Boating = L.Control.extend({
   },
 
   updateLegend: function (e) {
-    const lat = e.latlngDMS.lat
-    const lng = e.latlngDMS.lng
     const nautic = 40000 / 360 / 60
     const heading = Math.round(e.averageMotion.heading)
     const speed = Math.round(e.averageMotion.speed * 36 / nautic) / 10
-    let html = '<table><tbody>'
-    html += '<tr><td colspan="2" class="double">' + heading + ' °</td></tr>'
-    html += '<tr><td colspan="2" class="double">' + speed + ' kts</td></tr>'
-    html += '<tr><th>lat</th><td>' + lat + '</td></tr>'
-    html += '<tr><th>lon</th><td>' + lng + '</td></tr>'
-    html += '<tr><td colspan="2"><div class="gold"></div><div class="blue"></div></td></tr>'
-    html += '<tr><td colspan="2"><div class="hours"><div>0</div><div>1h</div><div>2h</div></div></td></tr>'
-    html += '</tbody></table>'
-    this.legend.container.innerHTML = html
+    this.legend.heading.innerHTML = heading + ' °'
+    this.legend.knots.innerHTML = speed + ' kts'
+    this.legend.lat.innerHTML = e.latlngDMS.lat
+    this.legend.lon.innerHTML = e.latlngDMS.lng
+  },
+
+  handleLegendCheckbox: function (e) {
+    console.log('checkbox changed', e.target.checked)
   },
 
   latlngDMS: function (e) {
@@ -260,24 +279,21 @@ L.Control.Boating = L.Control.extend({
   },
 
   averageMotion: (function () {
-    const cache = []
     const nb = 3
-
+    const cache = []
     return function(e) {
       cache.push(e)
       if (cache.length > nb) {
         cache.shift()
       }
-      const { sumX, sumY } = cache.reduce(
-        function ({ sumX, sumY }, e) {
-          return {
-            sumX: sumX + (e.speed || 0) * cosDeg(e.heading || 0),
-            sumY: sumY + (e.speed || 0) * sinDeg(e.heading || 0),
-          }
-        }, { sumX: 0, sumY: 0 }
+      const sumX = cache.reduce(
+        (sum, e) => sum + (e.speed || 0) * cosDeg(e.heading || 0), 0
+      )
+      const sumY = cache.reduce(
+        (sum, e) => sum + (e.speed || 0) * sinDeg(e.heading || 0), 0
       )
       return {
-        speed: Math.sqrt(Math.pow(sumX, 2) + Math.pow(sumY, 2)) / cache.length,
+        speed: Math.sqrt(sumX ** 2 + sumY ** 2) / cache.length,
         heading: atan2Deg(sumY, sumX),
       }
     }
