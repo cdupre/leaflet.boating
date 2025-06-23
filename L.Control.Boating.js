@@ -33,27 +33,33 @@ L.Control.Boating = L.Control.extend({
     this.legend = L.control({ position: this.options.legendPosition })
     this.legend.onAdd = function (map) {
       const container = L.DomUtil.create('div', 'leaflet-control leaflet-bar leaflet-control-boating-legend')
-      let html = '<table><tbody>'
-      html += '<tr><td colspan="2" class="double" id="heading"></td></tr>'
-      html += '<tr><td colspan="2" class="double" id="knots"></td></tr>'
-      html += '<tr><th>lat</th><td id="lat"></td></tr>'
-      html += '<tr><th>lon</th><td id="lon">/td></tr>'
-      html += '<tr><th>'
-      html += '<input type="checkbox" id="checkbox">'
-      html += '</th><td class="label">'
-      html += '<label for="checkbox">'
-      html += '<div class="gold"></div><div class="blue"></div>'
-      html += '<div class="hours"><div>0</div><div>1h</div><div>2h</div></div>'
-      html += '</label>'
-      html += '</td></tr>'
-      html += '</tbody></table>'
-      container.innerHTML = html
+      container.innerHTML = `
+        <table>
+          <tbody>
+            <tr><td colspan="2" class="double" id="heading"></td></tr>
+            <tr><td colspan="2" class="double" id="knots"></td></tr>
+            <tr><th>lat</th><td id="lat"></td></tr>
+            <tr><th>lon</th><td id="lon"></td></tr>
+            <tr>
+              <th><input type="checkbox" id="checkbox"></th>
+              <td class="label">
+                <label for="checkbox">
+                  <div class="gold"></div><div class="blue"></div>
+                  <div class="hours"><div>0</div><div>1h</div><div>2h</div></div>
+                </label>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      `
       this.lat = container.querySelector('#lat')
       this.lon = container.querySelector('#lon')
       this.knots = container.querySelector('#knots')
       this.heading = container.querySelector('#heading')
-      const checkbox = container.querySelector('#checkbox')
-      L.DomEvent.on(checkbox, 'change', that.handleLegendCheckbox)
+      this.checkbox = container.querySelector('#checkbox')
+      L.DomEvent.on(this.checkbox, 'change', function (e) {
+        that.handleLegendCheckbox(e)
+      })
       return container
     }
 
@@ -163,8 +169,6 @@ L.Control.Boating = L.Control.extend({
     if (this.isRequesting()) {
       this._map.addControl(this.legend)
       this._map.addLayer(this.circle)
-      this._map.addLayer(this.linebg)
-      this._map.addLayer(this.line)
       this._map.addLayer(this.boat)
       this.follow()
     }
@@ -207,6 +211,8 @@ L.Control.Boating = L.Control.extend({
   },
 
   updateLine: function (e) {
+    if (!this.legend.checkbox.checked) return
+
     const zoom = this._map.getZoom()
     const mapBounds = this._map.getBounds()
     const heading = e.averageMotion.heading
@@ -245,7 +251,14 @@ L.Control.Boating = L.Control.extend({
   },
 
   handleLegendCheckbox: function (e) {
-    console.log('checkbox changed', e.target.checked)
+    if (e.target.checked) {
+      this._map.addLayer(this.linebg)
+      this._map.addLayer(this.line)
+      this.updateLine(this.lastPosition)
+    } else {
+      this._map.removeLayer(this.linebg)
+      this._map.removeLayer(this.line)
+    }
   },
 
   latlngDMS: function (e) {
