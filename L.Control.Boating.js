@@ -224,10 +224,10 @@ L.Control.Boating = L.Control.extend({
     this.linebg.setLatLngs([e.latlng, dirPoint])
 
     const metersPerPixel = 40000000 * cosDeg(e.latlng.lat) / (256 * Math.pow(2, zoom))
-    const pixelsPerHalfHour = speed / metersPerPixel * 3600
+    const pixelsPerHour = speed / metersPerPixel * 3600
     this.line.setStyle({
-      dashArray: pixelsPerHalfHour + ',' + pixelsPerHalfHour,
-      dashOffset: pixelsPerHalfHour,
+      dashArray: pixelsPerHour + ',' + pixelsPerHour,
+      dashOffset: pixelsPerHour,
     })
   },
 
