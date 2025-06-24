@@ -40,7 +40,7 @@ L.Control.Boating = L.Control.extend({
             <tr><td colspan="2" class="double" id="knots"></td></tr>
             <tr><th>lat</th><td id="lat"></td></tr>
             <tr><th>lon</th><td id="lon"></td></tr>
-            <tr>
+            <tr class="checkbox">
               <th><input type="checkbox" id="checkbox"></th>
               <td class="label">
                 <label for="checkbox">
@@ -210,33 +210,33 @@ L.Control.Boating = L.Control.extend({
   },
 
   updateLine: function (e) {
-    if (!this.legend.checkbox.checked) return
+    if (this.legend.checkbox.checked) {
+      const zoom = this._map.getZoom()
+      const mapBounds = this._map.getBounds()
+      const heading = e.averageMotion.heading
+      const speed = e.averageMotion.speed
 
-    const zoom = this._map.getZoom()
-    const mapBounds = this._map.getBounds()
-    const heading = e.averageMotion.heading
-    const speed = e.averageMotion.speed
+      const length = Math.max(
+        mapBounds.getNorthWest().distanceTo(e.latlng),
+        mapBounds.getNorthEast().distanceTo(e.latlng),
+        mapBounds.getSouthEast().distanceTo(e.latlng),
+        mapBounds.getSouthWest().distanceTo(e.latlng),
+      )
+      const lengthDeg = length * 360 / 40000000
+      const dirPoint = L.latLng(
+        e.latlng.lat + (lengthDeg * cosDeg(heading)),
+        e.latlng.lng + (lengthDeg * sinDeg(heading) / cosDeg(e.latlng.lat)),
+      )
+      this.line.setLatLngs([e.latlng, dirPoint])
+      this.linebg.setLatLngs([e.latlng, dirPoint])
 
-    const length = Math.max(
-      mapBounds.getNorthWest().distanceTo(e.latlng),
-      mapBounds.getNorthEast().distanceTo(e.latlng),
-      mapBounds.getSouthEast().distanceTo(e.latlng),
-      mapBounds.getSouthWest().distanceTo(e.latlng),
-    )
-    const lengthDeg = length * 360 / 40000000
-    const dirPoint = L.latLng(
-      e.latlng.lat + (lengthDeg * cosDeg(heading)),
-      e.latlng.lng + (lengthDeg * sinDeg(heading) / cosDeg(e.latlng.lat)),
-    )
-    this.line.setLatLngs([e.latlng, dirPoint])
-    this.linebg.setLatLngs([e.latlng, dirPoint])
-
-    const metersPerPixel = 40000000 * cosDeg(e.latlng.lat) / (256 * Math.pow(2, zoom))
-    const pixelsPerHalfHour = speed / metersPerPixel * 3600
-    this.line.setStyle({
-      dashArray: pixelsPerHalfHour + ',' + pixelsPerHalfHour,
-      dashOffset: pixelsPerHalfHour,
-    })
+      const metersPerPixel = 40000000 * cosDeg(e.latlng.lat) / (256 * Math.pow(2, zoom))
+      const pixelsPerHalfHour = speed / metersPerPixel * 3600
+      this.line.setStyle({
+        dashArray: pixelsPerHalfHour + ',' + pixelsPerHalfHour,
+        dashOffset: pixelsPerHalfHour,
+      })
+    }
   },
 
   updateLegend: function (e) {
