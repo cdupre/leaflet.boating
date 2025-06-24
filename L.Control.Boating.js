@@ -41,7 +41,7 @@ L.Control.Boating = L.Control.extend({
             <tr><th>lat</th><td id="lat"></td></tr>
             <tr><th>lon</th><td id="lon"></td></tr>
             <tr class="checkbox">
-              <th><input type="checkbox" id="checkbox"></th>
+              <td><input type="checkbox" id="checkbox"></th>
               <td class="label">
                 <label for="checkbox">
                   <div class="gold"></div><div class="blue"></div>
