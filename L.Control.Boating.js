@@ -29,7 +29,6 @@ L.Control.Boating = L.Control.extend({
       this.onClick()
     }, this)
 
-    const that = this
     this.legend = L.control({ position: this.options.legendPosition })
     this.legend.onAdd = function (map) {
       const container = L.DomUtil.create('div', 'leaflet-control leaflet-bar leaflet-control-boating-legend')
@@ -40,25 +39,18 @@ L.Control.Boating = L.Control.extend({
             <tr><td colspan="2" class="double" id="knots"></td></tr>
             <tr><th>lat</th><td id="lat"></td></tr>
             <tr><th>lon</th><td id="lon"></td></tr>
-            <tr class="checkbox">
-              <td><input type="checkbox" id="checkbox"></th>
-              <td class="label">
-                <label for="checkbox">
-                  <div class="gold"></div><div class="blue"></div>
-                  <div class="hours"><div>0</div><div>1h</div><div>2h</div></div>
-                </label>
+            <tr>
+              <td colspan="2">
+                <div class="gold"></div><div class="blue"></div>
+                <div class="hours"><div>0</div><div>1h</div><div>2h</div></div>
               </td>
             </tr>
           </tbody>
         </table>`
+      this.heading = container.querySelector('#heading')
+      this.knots = container.querySelector('#knots')
       this.lat = container.querySelector('#lat')
       this.lon = container.querySelector('#lon')
-      this.knots = container.querySelector('#knots')
-      this.heading = container.querySelector('#heading')
-      this.checkbox = container.querySelector('#checkbox')
-      L.DomEvent.on(this.checkbox, 'change', function (e) {
-        that.handleLegendCheckbox(e)
-      })
       return container
     }
 
@@ -168,6 +160,8 @@ L.Control.Boating = L.Control.extend({
     if (this.isRequesting()) {
       this._map.addControl(this.legend)
       this._map.addLayer(this.circle)
+      this._map.addLayer(this.linebg)
+      this._map.addLayer(this.line)
       this._map.addLayer(this.boat)
       this.follow()
     }
@@ -210,33 +204,31 @@ L.Control.Boating = L.Control.extend({
   },
 
   updateLine: function (e) {
-    if (this.legend.checkbox.checked) {
-      const zoom = this._map.getZoom()
-      const mapBounds = this._map.getBounds()
-      const heading = e.averageMotion.heading
-      const speed = e.averageMotion.speed
+    const zoom = this._map.getZoom()
+    const mapBounds = this._map.getBounds()
+    const heading = e.averageMotion.heading
+    const speed = e.averageMotion.speed
 
-      const length = Math.max(
-        mapBounds.getNorthWest().distanceTo(e.latlng),
-        mapBounds.getNorthEast().distanceTo(e.latlng),
-        mapBounds.getSouthEast().distanceTo(e.latlng),
-        mapBounds.getSouthWest().distanceTo(e.latlng),
-      )
-      const lengthDeg = length * 360 / 40000000
-      const dirPoint = L.latLng(
-        e.latlng.lat + (lengthDeg * cosDeg(heading)),
-        e.latlng.lng + (lengthDeg * sinDeg(heading) / cosDeg(e.latlng.lat)),
-      )
-      this.line.setLatLngs([e.latlng, dirPoint])
-      this.linebg.setLatLngs([e.latlng, dirPoint])
+    const length = Math.max(
+      mapBounds.getNorthWest().distanceTo(e.latlng),
+      mapBounds.getNorthEast().distanceTo(e.latlng),
+      mapBounds.getSouthEast().distanceTo(e.latlng),
+      mapBounds.getSouthWest().distanceTo(e.latlng),
+    )
+    const lengthDeg = length * 360 / 40000000
+    const dirPoint = L.latLng(
+      e.latlng.lat + (lengthDeg * cosDeg(heading)),
+      e.latlng.lng + (lengthDeg * sinDeg(heading) / cosDeg(e.latlng.lat)),
+    )
+    this.line.setLatLngs([e.latlng, dirPoint])
+    this.linebg.setLatLngs([e.latlng, dirPoint])
 
-      const metersPerPixel = 40000000 * cosDeg(e.latlng.lat) / (256 * Math.pow(2, zoom))
-      const pixelsPerHalfHour = speed / metersPerPixel * 3600
-      this.line.setStyle({
-        dashArray: pixelsPerHalfHour + ',' + pixelsPerHalfHour,
-        dashOffset: pixelsPerHalfHour,
-      })
-    }
+    const metersPerPixel = 40000000 * cosDeg(e.latlng.lat) / (256 * Math.pow(2, zoom))
+    const pixelsPerHalfHour = speed / metersPerPixel * 3600
+    this.line.setStyle({
+      dashArray: pixelsPerHalfHour + ',' + pixelsPerHalfHour,
+      dashOffset: pixelsPerHalfHour,
+    })
   },
 
   updateLegend: function (e) {
@@ -247,17 +239,6 @@ L.Control.Boating = L.Control.extend({
     this.legend.knots.innerHTML = speed + ' kts'
     this.legend.lat.innerHTML = e.latlngDMS.lat
     this.legend.lon.innerHTML = e.latlngDMS.lng
-  },
-
-  handleLegendCheckbox: function (e) {
-    if (e.target.checked) {
-      this._map.addLayer(this.linebg)
-      this._map.addLayer(this.line)
-      this.updateLine(this.lastPosition)
-    } else {
-      this._map.removeLayer(this.linebg)
-      this._map.removeLayer(this.line)
-    }
   },
 
   latlngDMS: function (e) {

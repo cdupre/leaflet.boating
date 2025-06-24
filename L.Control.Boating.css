@@ -28,21 +28,18 @@
 .leaflet-control-boating-legend td.double {
   font-size: large;
 }
-.leaflet-control-boating-legend td.label {
-  padding: 0 5px;
-}
 .leaflet-control-boating-legend td div.gold {
   width: 50%;
   float: left;
   height: 3px;
-  margin-top: 5px;
+  margin-top: 4px;
   background-color: gold;
 }
 .leaflet-control-boating-legend td div.blue {
   width: 50%;
   float: left;
   height: 3px;
-  margin-top: 5px;
+  margin-top: 4px;
   background-color: #3388ff;
 }
 .leaflet-control-boating-legend td div.hours {
@@ -50,9 +47,6 @@
   float: left;
   display: flex;
   justify-content: space-between;
-}
-.leaflet-control-boating-legend tr.checkbox td * {
-  cursor: pointer;
 }
 @keyframes spin {
   0% {
