@@ -38,7 +38,7 @@ L.Control.Boating = L.Control.extend({
             <tr><td colspan="2" class="double" id="heading"></td></tr>
             <tr><td colspan="2" class="double" id="knots"></td></tr>
             <tr><th>lat</th><td id="lat"></td></tr>
-            <tr><th>lon</th><td id="lon"></td></tr>
+            <tr><th>lon</th><td id="lng"></td></tr>
             <tr>
               <td colspan="2">
                 <div class="gold"></div><div class="blue"></div>
@@ -50,7 +50,7 @@ L.Control.Boating = L.Control.extend({
       this.heading = container.querySelector('#heading')
       this.knots = container.querySelector('#knots')
       this.lat = container.querySelector('#lat')
-      this.lon = container.querySelector('#lon')
+      this.lng = container.querySelector('#lng')
       return container
     }
 
@@ -238,7 +238,7 @@ L.Control.Boating = L.Control.extend({
     this.legend.heading.innerHTML = heading + ' °'
     this.legend.knots.innerHTML = speed + ' kts'
     this.legend.lat.innerHTML = e.latlngDMS.lat
-    this.legend.lon.innerHTML = e.latlngDMS.lng
+    this.legend.lng.innerHTML = e.latlngDMS.lng
   },
 
   latlngDMS: function (e) {
