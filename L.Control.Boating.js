@@ -54,6 +54,21 @@ L.Control.Boating = L.Control.extend({
       return container
     }
 
+    this.boat = L.marker([0, 0], {
+      icon: L.divIcon({
+        iconAnchor: [12.5, 12.5],
+        iconSize: [25, 25],
+        className: 'boat',
+        html: `
+          <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" id="boat-svg">
+            <path d="M 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512 Z" fill="#3388ff"/>
+          </svg>`,
+      })
+    })
+    this.boat.on('add', function() {
+      this.svg = this.getElement().querySelector('#boat-svg')
+    })
+
     this.circle = L.circle([0, 0], {
       stroke: false,
     })
@@ -65,8 +80,6 @@ L.Control.Boating = L.Control.extend({
     this.linebg = L.polyline([[0, 0], [0, 0]], {
       color: 'gold',
     })
-
-    this.boat = L.marker([0, 0])
 
     return container
   },
@@ -190,17 +203,8 @@ L.Control.Boating = L.Control.extend({
 
   updateBoat: function (e) {
     const heading = e.averageMotion.heading
-    let svg = '<svg transform="rotate(' + heading + ')" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">'
-    svg += '<path d="M 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512 Z" fill="#3388ff"/></svg>'
+    this.boat.svg.style.transform = 'rotate(' + heading + 'deg)'
     this.boat.setLatLng(e.latlng)
-    this.boat.setIcon(
-      L.divIcon({
-        iconAnchor: [12.5, 12.5],
-        iconSize: [25, 25],
-        className: 'boat',
-        html: svg,
-      })
-    )
   },
 
   updateLine: function (e) {
