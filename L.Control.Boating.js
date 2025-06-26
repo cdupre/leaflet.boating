@@ -168,7 +168,7 @@ L.Control.Boating = L.Control.extend({
 
   onLocationFound: function (e) {
     e.latlngDMS = this.latlngDMS(e)
-    e.averageMotion = this.averageMotion(e)
+    e.smooth = this.smoothMotion(e)
 
     if (this.isRequesting()) {
       this._map.addControl(this.legend)
@@ -202,7 +202,7 @@ L.Control.Boating = L.Control.extend({
   },
 
   updateBoat: function (e) {
-    const heading = e.averageMotion.heading
+    const heading = e.smooth.heading
     this.boat.svg.style.transform = 'rotate(' + heading + 'deg)'
     this.boat.setLatLng(e.latlng)
   },
@@ -210,8 +210,8 @@ L.Control.Boating = L.Control.extend({
   updateLine: function (e) {
     const zoom = this._map.getZoom()
     const mapBounds = this._map.getBounds()
-    const heading = e.averageMotion.heading
-    const speed = e.averageMotion.speed
+    const heading = e.smooth.heading
+    const speed = e.smooth.speed
 
     const length = Math.max(
       mapBounds.getNorthWest().distanceTo(e.latlng),
@@ -237,8 +237,8 @@ L.Control.Boating = L.Control.extend({
 
   updateLegend: function (e) {
     const nautic = 40000 / 360 / 60
-    const heading = Math.round(e.averageMotion.heading)
-    const speed = Math.round(e.averageMotion.speed * 36 / nautic) / 10
+    const heading = Math.round(e.smooth.heading)
+    const speed = Math.round(e.smooth.speed * 36 / nautic) / 10
     this.legend.heading.innerHTML = heading + ' °'
     this.legend.knots.innerHTML = speed + ' kts'
     this.legend.lat.innerHTML = e.latlngDMS.lat
@@ -275,8 +275,8 @@ L.Control.Boating = L.Control.extend({
     }
   },
 
-  averageMotion: (function () {
-    const nb = 3
+  smoothMotion: (function () {
+    const nb = 10
     const cache = []
     return function(e) {
       cache.push(e)
