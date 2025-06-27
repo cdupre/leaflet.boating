@@ -290,7 +290,7 @@ L.Control.Boating = L.Control.extend({
         (sum, e) => sum + (e.speed || 0) * sinDeg(e.heading || 0), 0
       )
       return {
-        speed: Math.sqrt(sumX ** 2 + sumY ** 2) / cache.length,
+        speed: Math.sqrt(sumX ** 2 + sumY ** 2) / nb,
         heading: atan2Deg(sumY, sumX),
       }
     }
