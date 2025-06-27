@@ -15,6 +15,10 @@ L.Control.Boating = L.Control.extend({
   options: {
     position: 'topleft',
     legendPosition: 'bottomright',
+    boatColor: '#3388ff',
+    lineColor1: '#ffcc00',
+    lineColor2: '#3388ff',
+    circleColor: '#3388ff',
   },
 
   onAdd: function (map) {
@@ -29,7 +33,11 @@ L.Control.Boating = L.Control.extend({
       this.onClick()
     }, this)
 
-    this.legend = L.control({ position: this.options.legendPosition })
+    this.legend = L.control({
+      position: this.options.legendPosition,
+      lineColor1: this.options.lineColor1,
+      lineColor2: this.options.lineColor2
+    })
     this.legend.onAdd = function (map) {
       const container = L.DomUtil.create('div', 'leaflet-control leaflet-bar leaflet-control-boating-legend')
       container.innerHTML = `
@@ -41,7 +49,8 @@ L.Control.Boating = L.Control.extend({
             <tr><th>lon</th><td id="lng"></td></tr>
             <tr>
               <td colspan="2">
-                <div class="gold"></div><div class="blue"></div>
+                <div class="line" style="background-color: ${this.options.lineColor1}"></div>
+                <div class="line" style="background-color: ${this.options.lineColor2}"></div>
                 <div class="hours"><div>0</div><div>1h</div><div>2h</div></div>
               </td>
             </tr>
@@ -61,7 +70,7 @@ L.Control.Boating = L.Control.extend({
         className: 'boat',
         html: `
           <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" id="boat-svg">
-            <path d="M 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512 Z" fill="#3388ff"/>
+            <path d="M 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512 Z" fill="${this.options.boatColor}"/>
           </svg>`,
       })
     })
@@ -70,15 +79,17 @@ L.Control.Boating = L.Control.extend({
     })
 
     this.circle = L.circle([0, 0], {
+      color: this.options.circleColor,
       stroke: false,
     })
 
     this.line = L.polyline([[0, 0], [0, 0]], {
+      color: this.options.lineColor2,
       lineCap: 'square',
     })
 
     this.linebg = L.polyline([[0, 0], [0, 0]], {
-      color: 'gold',
+      color: this.options.lineColor1,
     })
 
     return container
