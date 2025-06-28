@@ -287,7 +287,7 @@ L.Control.Boating = L.Control.extend({
   },
 
   smoothMotion: (function () {
-    const nb = 10
+    const nb = 4
     const cache = []
     return function(e) {
       cache.push(e)
@@ -301,7 +301,7 @@ L.Control.Boating = L.Control.extend({
         (sum, e) => sum + (e.speed || 0) * sinDeg(e.heading || 0), 0
       )
       return {
-        speed: Math.sqrt(sumX ** 2 + sumY ** 2) / nb,
+        speed: Math.sqrt(sumX ** 2 + sumY ** 2) / cache.length,
         heading: atan2Deg(sumY, sumX),
       }
     }
