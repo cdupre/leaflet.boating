@@ -19,6 +19,7 @@ L.Control.Boating = L.Control.extend({
     lineColor1: '#ffcc00',
     lineColor2: '#3388ff',
     circleColor: '#3388ff',
+    cacheLength: 4,
   },
 
   onAdd: function (map) {
@@ -287,11 +288,10 @@ L.Control.Boating = L.Control.extend({
   },
 
   smoothMotion: (function () {
-    const nb = 4
     const cache = []
     return function(e) {
       cache.push(e)
-      if (cache.length > nb) {
+      if (cache.length > this.options.cacheLength) {
         cache.shift()
       }
       const sumX = cache.reduce(
