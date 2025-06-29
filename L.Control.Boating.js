@@ -1,15 +1,3 @@
-function cosDeg(deg) {
-  return Math.cos(deg * Math.PI / 180)
-}
-
-function sinDeg(deg) {
-  return Math.sin(deg * Math.PI / 180)
-}
-
-function atan2Deg(x, y) {
-  return ((Math.atan2(x, y) * 180 / Math.PI) + 360) % 360
-}
-
 L.Control.Boating = L.Control.extend({
 
   options: {
@@ -94,6 +82,18 @@ L.Control.Boating = L.Control.extend({
     })
 
     return container
+  },
+
+  cosD: function (deg) {
+    return Math.cos(deg * Math.PI / 180)
+  },
+
+  sinD: function (deg) {
+    return Math.sin(deg * Math.PI / 180)
+  },
+
+  atan2D: function (x, y) {
+    return ((Math.atan2(x, y) * 180 / Math.PI) + 360) % 360
   },
 
   isRequesting: function () {
@@ -233,13 +233,13 @@ L.Control.Boating = L.Control.extend({
     )
     const lengthDeg = length * 360 / 40000000
     const dirPoint = L.latLng(
-      e.latlng.lat + (lengthDeg * cosDeg(heading)),
-      e.latlng.lng + (lengthDeg * sinDeg(heading) / cosDeg(e.latlng.lat)),
+      e.latlng.lat + (lengthDeg * this.cosD(heading)),
+      e.latlng.lng + (lengthDeg * this.sinD(heading) / this.cosD(e.latlng.lat)),
     )
     this.line.setLatLngs([e.latlng, dirPoint])
     this.linebg.setLatLngs([e.latlng, dirPoint])
 
-    const metersPerPixel = 40000000 * cosDeg(e.latlng.lat) / (256 * Math.pow(2, zoom))
+    const metersPerPixel = 40000000 * this.cosD(e.latlng.lat) / (256 * Math.pow(2, zoom))
     const pixelsPerHour = speed / metersPerPixel * 3600
     this.line.setStyle({
       dashArray: pixelsPerHour + ',' + pixelsPerHour,
@@ -295,14 +295,14 @@ L.Control.Boating = L.Control.extend({
         cache.shift()
       }
       const sumX = cache.reduce(
-        (sum, e) => sum + (e.speed || 0) * cosDeg(e.heading || 0), 0
+        (sum, e) => sum + (e.speed || 0) * this.cosD(e.heading || 0), 0
       )
       const sumY = cache.reduce(
-        (sum, e) => sum + (e.speed || 0) * sinDeg(e.heading || 0), 0
+        (sum, e) => sum + (e.speed || 0) * this.sinD(e.heading || 0), 0
       )
       return {
         speed: Math.sqrt(sumX ** 2 + sumY ** 2) / cache.length,
-        heading: atan2Deg(sumY, sumX),
+        heading: this.atan2D(sumY, sumX),
       }
     }
   })(),
