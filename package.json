@@ -13,12 +13,6 @@
     },
     "./dist/*": "./dist/*"
   },
-  "files": [
-    "dist",
-    "assets",
-    "README.md",
-    "LICENSE"
-  ],
   "sideEffects": [
     "*.css",
     "./dist/L.Control.Boating.js"
