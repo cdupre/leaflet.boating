@@ -2,16 +2,16 @@
   width: 30px;
   height: 30px;
   display: inline-block;
-  background-image: url(assets/icon.svg);
+  background-image: url(../assets/icon.svg);
 }
 .leaflet-control-boating-arrow.following {
-  background-image: url(assets/icon.following.svg);
+  background-image: url(../assets/icon.following.svg);
 }
 .leaflet-control-boating-arrow.locating {
-  background-image: url(assets/icon.locating.svg);
+  background-image: url(../assets/icon.locating.svg);
 }
 .leaflet-control-boating-arrow.requesting {
-  background-image: url(assets/icon.requesting.svg);
+  background-image: url(../assets/icon.requesting.svg);
   animation: spin 2s linear infinite;
 }
 .leaflet-control-boating-legend {
@@ -50,5 +50,5 @@
 }
 body::after { /* preloading icons */
   position: absolute; width: 0; height: 0; overflow: hidden; z-index: -1;
-  content: url(assets/icon.svg) url(assets/icon.locating.svg) url(assets/icon.following.svg) url(assets/icon.requesting.svg);
+  content: url(../assets/icon.svg) url(../assets/icon.locating.svg) url(../assets/icon.following.svg) url(../assets/icon.requesting.svg);
 }

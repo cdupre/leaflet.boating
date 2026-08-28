@@ -1,0 +1,58 @@
+{
+  "name": "leaflet.boating",
+  "version": "1.0.0",
+  "description": "A Leaflet plugin to geolocate the user and display heading, speed and location like a simple navigation app",
+  "type": "module",
+  "main": "dist/L.Control.Boating.js",
+  "module": "dist/L.Control.Boating.esm.js",
+  "style": "dist/L.Control.Boating.css",
+  "exports": {
+    ".": {
+      "import": "./dist/L.Control.Boating.esm.js",
+      "default": "./dist/L.Control.Boating.js"
+    },
+    "./dist/*": "./dist/*"
+  },
+  "files": [
+    "dist",
+    "assets",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "*.css",
+    "./dist/L.Control.Boating.js"
+  ],
+  "keywords": [
+    "leaflet",
+    "leaflet-plugin",
+    "map",
+    "geolocation",
+    "gps",
+    "navigation",
+    "boating"
+  ],
+  "author": "Clément Dupré",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cdupre/leaflet.boating.git"
+  },
+  "homepage": "https://cdupre.github.io/leaflet.boating",
+  "bugs": {
+    "url": "https://github.com/cdupre/leaflet.boating/issues"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w & http-server . -d -p 8080",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "leaflet": "^1.9.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "leaflet": "^1.9.0",
+    "rollup": "^4.63.0"
+  }
+}
