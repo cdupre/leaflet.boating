@@ -56,12 +56,14 @@ Possible options are listed in the following table
 | Option | Type | Description | Default |
 | --- | --- | --- | --- |
 | `position` | `String`  | Position of the control | `topleft` |
-| `legendPosition` | `String`  | Position of the legend | `bottomright` |
+| `circleColor` | `String`  | Circle color | `#3388ff` |
 | `boatColor` | `String`  | Boat color | `#3388ff` |
 | `lineColor1` | `String`  | First color for the line | `#ffcc00` |
 | `lineColor2` | `String`  | Second color for the line | `#3388ff` |
-| `circleColor` | `String`  | Circle color | `#3388ff` |
 | `cacheLength` | `Number`  | Speed and heading cache for smoothest line movements | `4` |
+| `legendPosition` | `String`  | Position of the legend | `bottomright` |
+| `legendHTML` | `String`  | Legend HTML rendered with [`L.Util.template`](https://leafletjs.com/reference.html#util-template). Available placeholders: `{heading}`, `{speed}`, `{lat}`, `{lng}` | see source in [core.js](src/core.js) |
+| `legendCSS` | `String`  | Legend styles, injected once and scoped to the legend. Use `:scope` to target the legend container itself | see source in [core.js](src/core.js) |
 
 ## Development
 

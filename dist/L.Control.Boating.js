@@ -9,12 +9,63 @@
 
       options: {
         position: 'topleft',
-        legendPosition: 'bottomright',
         boatColor: '#3388ff',
+        circleColor: '#3388ff',
         lineColor1: '#ffcc00',
         lineColor2: '#3388ff',
-        circleColor: '#3388ff',
         cacheLength: 4,
+        legendShown: true,
+        legendPosition: 'bottomright',
+        legendHTML: `
+        <table>
+          <tbody>
+            <tr><td colspan="2" class="double">{heading}</td></tr>
+            <tr><td colspan="2" class="double">{speed}</td></tr>
+            <tr><th>lat</th><td>{lat}</td></tr>
+            <tr><th>lng</th><td>{lng}</td></tr>
+            <tr>
+              <td colspan="2">
+                <div class="line one"></div><div class="line two"></div>
+                <div class="hours"><div>0</div><div>1h</div><div>2h</div></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      `,
+        legendCSS: `
+        :scope {
+          padding: 5px 8px;
+          background: white;
+        }
+        th {
+          font-weight: normal;
+          color: rgb(0, 0, 0, .7);
+        }
+        td {
+          text-align: center;
+        }
+        td.double {
+          font-size: large;
+        }
+        td div.line {
+          width: 50%;
+          float: left;
+          height: 3px;
+          margin-top: 4px;
+        }
+        td div.line.one {
+          background-color: #ffcc00;
+        }
+        td div.line.two {
+          background-color: #3388ff;
+        }
+        td div.hours {
+          width: 100%;
+          float: left;
+          display: flex;
+          justify-content: space-between;
+        }
+      `,
       },
 
       onAdd: function (map) {
@@ -31,31 +82,17 @@
 
         this.legend = new Control({
           position: this.options.legendPosition,
-          lineColor1: this.options.lineColor1,
-          lineColor2: this.options.lineColor2
+          css: this.options.legendCSS,
         });
         this.legend.onAdd = function (map) {
           const container = DomUtil.create('div', 'leaflet-control leaflet-bar leaflet-control-boating-legend');
           container.innerHTML = `
-          <table>
-            <tbody>
-              <tr><td colspan="2" class="double" id="heading"></td></tr>
-              <tr><td colspan="2" class="double" id="knots"></td></tr>
-              <tr><th>lat</th><td id="lat"></td></tr>
-              <tr><th>lon</th><td id="lng"></td></tr>
-              <tr>
-                <td colspan="2">
-                  <div class="line" style="background-color: ${this.options.lineColor1}"></div>
-                  <div class="line" style="background-color: ${this.options.lineColor2}"></div>
-                  <div class="hours"><div>0</div><div>1h</div><div>2h</div></div>
-                </td>
-              </tr>
-            </tbody>
-          </table>`;
-          this.heading = container.querySelector('#heading');
-          this.knots = container.querySelector('#knots');
-          this.lat = container.querySelector('#lat');
-          this.lng = container.querySelector('#lng');
+          <style>
+            @scope (.leaflet-control-boating-legend) {
+              ${this.options.css}
+            }
+          </style>`;
+          this.body = DomUtil.create('div', '', container);
           return container
         };
 
@@ -258,10 +295,17 @@
         const nautic = 40000 / 360 / 60;
         const heading = Math.round(e.smooth.heading);
         const speed = Math.round(e.smooth.speed * 36 / nautic) / 10;
-        this.legend.heading.innerHTML = heading + ' °';
-        this.legend.knots.innerHTML = speed + ' kts';
-        this.legend.lat.innerHTML = e.latlngDMS.lat;
-        this.legend.lng.innerHTML = e.latlngDMS.lng;
+
+        this.legend.body.innerHTML = L.Util.template(
+          this.options.legendHTML, {
+            lineColor1: this.options.lineColor1,
+            lineColor2: this.options.lineColor2,
+            heading: heading + ' °',
+            speed: speed + ' kts',
+            lat: e.latlngDMS.lat,
+            lng: e.latlngDMS.lng,
+          }
+        );
       },
 
       latlngDMS: function (e) {

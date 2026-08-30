@@ -14,32 +14,6 @@
   background-image: url(../assets/icon.requesting.svg);
   animation: spin 2s linear infinite;
 }
-.leaflet-control-boating-legend {
-  padding: 5px 8px;
-  background: white;
-}
-.leaflet-control-boating-legend th {
-  font-weight: normal;
-  color: rgb(0, 0, 0, .7);
-}
-.leaflet-control-boating-legend td {
-  text-align: center;
-}
-.leaflet-control-boating-legend td.double {
-  font-size: large;
-}
-.leaflet-control-boating-legend td div.line {
-  width: 50%;
-  float: left;
-  height: 3px;
-  margin-top: 4px;
-}
-.leaflet-control-boating-legend td div.hours {
-  width: 100%;
-  float: left;
-  display: flex;
-  justify-content: space-between;
-}
 @keyframes spin {
   0% {
     transform: rotate(0deg);
