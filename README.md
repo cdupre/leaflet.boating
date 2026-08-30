@@ -80,9 +80,9 @@ returns the `Boating` control
 
 ```
 npm install
-npm run dev     # builds dist/ on every change, and serves this folder on :8080
+npm run dev     # builds dist/ on every change
 ```
-During dev, test files are served [here](http://localhost:8080/test/). Remember to reload pages manually, no hot reload configured !
+During dev, index files are served on [http://localhost:8080/test/](http://localhost:8080/test/). Remember to reload pages manually, no hot reload configured !
 
 ## Demo
 
