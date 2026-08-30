@@ -14,7 +14,6 @@
         lineColor1: '#ffcc00',
         lineColor2: '#3388ff',
         cacheLength: 4,
-        legendShown: true,
         legendPosition: 'bottomright',
         legendHTML: `
         <table>
