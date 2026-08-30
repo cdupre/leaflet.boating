@@ -2,7 +2,7 @@ import * as leaflet from 'leaflet';
 
 function createPlugin(L) {
 
-  const { Control, DomUtil, DomEvent, Marker, DivIcon, Circle, Polyline, LatLng } = L;
+  const { Control, DomUtil, DomEvent, Marker, DivIcon, Circle, Polyline, LatLng, Util } = L;
 
   return Control.extend({
 
@@ -295,7 +295,7 @@ function createPlugin(L) {
       const heading = Math.round(e.smooth.heading);
       const speed = Math.round(e.smooth.speed * 36 / nautic) / 10;
 
-      this.legend.body.innerHTML = L.Util.template(
+      this.legend.body.innerHTML = Util.template(
         this.options.legendHTML, {
           lineColor1: this.options.lineColor1,
           lineColor2: this.options.lineColor2,
