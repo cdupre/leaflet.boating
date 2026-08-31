@@ -1,6 +1,6 @@
 {
   "name": "leaflet.boating",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A Leaflet plugin to geolocate the user and display heading, speed and location like a simple navigation app",
   "type": "module",
   "main": "dist/L.Control.Boating.js",
