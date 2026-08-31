@@ -71,18 +71,8 @@ export default function createPlugin(L) {
       `,
     },
 
-    onAdd: function (map) {
-      const container = DomUtil.create('div', 'leaflet-bar leaflet-control')
-      const link = DomUtil.create('a', 'leaflet-bar-part leaflet-bar-part-single', container)
-      this._icon = DomUtil.create('span', 'leaflet-control-boating-arrow', link)
-      link.href = '#'
-
-      DomEvent.disableClickPropagation(container)
-      DomEvent.on(link, 'click', function (e) {
-        DomEvent.stopPropagation(e)
-        DomEvent.preventDefault(e)
-        this._onClick()
-      }, this)
+    initialize: function (options) {
+      Util.setOptions(this, options)
 
       this._legend = new Control({
         position: this.options.legendPosition,
@@ -128,6 +118,20 @@ export default function createPlugin(L) {
       this._linebg = new Polyline([[0, 0], [0, 0]], {
         color: this.options.lineColor1,
       })
+    },
+
+    onAdd: function (map) {
+      const container = DomUtil.create('div', 'leaflet-bar leaflet-control')
+      const link = DomUtil.create('a', 'leaflet-bar-part leaflet-bar-part-single', container)
+      this._icon = DomUtil.create('span', 'leaflet-control-boating-arrow', link)
+      link.href = '#'
+
+      DomEvent.disableClickPropagation(container)
+      DomEvent.on(link, 'click', function (e) {
+        DomEvent.stopPropagation(e)
+        DomEvent.preventDefault(e)
+        this._onClick()
+      }, this)
 
       return container
     },

@@ -57,7 +57,7 @@ Possible options are listed in the following table
 | `lineColor2` | `String`  | Second color for the line | `#3388ff` |
 | `motionCacheLength` | `Number`  | number of averaged GPS samples for smoothest movements | `4` |
 | `legendPosition` | `String`  | Position of the legend | `bottomright` |
-| `legendHTML` | `String`  | Legend HTML rendered with [`L.Util.template`](https://leafletjs.com/reference.html#util-template). Available placeholders: `{heading}`, `{speed}`, `{lat}`, `{lng}` | *(see source in [core.js](src/core.js))* |
+| `legendHTML` | `String`  | Legend HTML rendered with [`L.Util.template`](https://leafletjs.com/reference.html#util-template). Available placeholders: `{heading}`, `{speed}`, `{lat}`, `{lng}`, `{lineColor1}`, `{lineColor2}` | *(see source in [core.js](src/core.js))* |
 | `legendCSS` | `String`  | Legend styles, injected once and scoped to the legend. Use `:scope` to target the legend container itself | *(see source in [core.js](src/core.js))* |
 
 ### Events
