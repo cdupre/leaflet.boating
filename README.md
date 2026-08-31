@@ -65,6 +65,35 @@ Possible options are listed in the following table
 | `legendHTML` | `String`  | Legend HTML rendered with [`L.Util.template`](https://leafletjs.com/reference.html#util-template). Available placeholders: `{heading}`, `{speed}`, `{lat}`, `{lng}` | *(see source in [core.js](src/core.js))* |
 | `legendCSS` | `String`  | Legend styles, injected once and scoped to the legend. Use `:scope` to target the legend container itself | *(see source in [core.js](src/core.js))* |
 
+### Events
+
+You can personnalize location errors:
+
+```js
+const boating = L.control.boating().addTo(map)
+boating.onLocationError = function (e) {
+  console.error(e)
+  boating.stop()
+  ...
+}
+
+or
+
+const boating = new Boating().addTo(map)
+boating.onLocationError = function (e) {
+  console.error(e)
+  boating.stop()
+  ...
+}
+```
+
+### Methods
+
+| Method | Description |
+| --- | --- |
+| `start()` | Begin watching the location (same as clicking the control) |
+| `stop()` | Stop watching and remove the boat, circle, heading line and legend |
+
 ## Development
 
 Feel free to suggest or develop new features or modifications :)

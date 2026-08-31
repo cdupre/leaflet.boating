@@ -6,6 +6,11 @@
   "main": "dist/L.Control.Boating.js",
   "module": "dist/L.Control.Boating.esm.js",
   "style": "dist/L.Control.Boating.css",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "exports": {
     ".": {
       "import": "./dist/L.Control.Boating.esm.js",

@@ -144,8 +144,8 @@ export default function createPlugin(L) {
     start: function () {
       this._map.on('moveend', this._onMoveEnd, this)
       this._map.on('dragstart', this._onDragStart, this)
+      this._map.on('locationerror', this.onLocationError, this)
       this._map.on('locationfound', this._onLocationFound, this)
-      this._map.on('locationerror', this._onLocationError, this)
       this._map.locate({ watch: true, enableHighAccuracy: true })
       this._icon.classList.remove('following')
       this._icon.classList.remove('locating')
@@ -247,7 +247,7 @@ export default function createPlugin(L) {
       this._lastPosition = e
     },
 
-    _onLocationError: function (e) {
+    onLocationError: function (e) {
       console.error(e)
       if (e.code === 1) {
         alert('unlock geolocation please')
