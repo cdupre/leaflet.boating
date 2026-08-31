@@ -8,15 +8,10 @@ Built and tested for Leaflet 1.9.x.
 ### Set up
 
 #### With `<script>` tag
-
-Clone the repository
-```
-git clone https://github.com/cdupre/leaflet.boating
-```
 Add the following in html headers
 ```html
-<link rel="stylesheet" href="path/to/L.Control.Boating.css" />
-<script src="path/to/L.Control.Boating.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.boating@latest/dist/L.Control.Boating.css" />
+<script src="https://unpkg.com/leaflet.boating@latest/dist/L.Control.Boating.js"></script>
 ```
 Add the following snippet to your map initialization
 ```js
