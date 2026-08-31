@@ -1,7 +1,5 @@
 export default function createPlugin(L) {
 
-  const { Control, DomUtil, DomEvent, Marker, DivIcon, Circle, Polyline, LatLng, Util } = L
-
   function cosD(deg) {
     return Math.cos(deg * Math.PI / 180)
   }
@@ -10,9 +8,11 @@ export default function createPlugin(L) {
     return Math.sin(deg * Math.PI / 180)
   }
 
-  function atan2D(x, y) {
-    return ((Math.atan2(x, y) * 180 / Math.PI) + 360) % 360
+  function atan2D(y, x) {
+    return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360
   }
+
+  const { Control, DomUtil, DomEvent, Marker, DivIcon, Circle, Polyline, LatLng, Util } = L
 
   return Control.extend({
 
@@ -139,8 +139,8 @@ export default function createPlugin(L) {
     start: function () {
       this._map.on('moveend', this._onMoveEnd, this)
       this._map.on('dragstart', this._onDragStart, this)
-      this._map.on('locationerror', this.onLocationError, this)
       this._map.on('locationfound', this._onLocationFound, this)
+      this._map.on('locationerror', this._onLocationError, this)
       this._map.locate({ watch: true, enableHighAccuracy: true })
       this._icon.classList.remove('following')
       this._icon.classList.remove('locating')
@@ -153,8 +153,8 @@ export default function createPlugin(L) {
       this._map.stopLocate()
       this._map.off('moveend', this._onMoveEnd, this)
       this._map.off('dragstart', this._onDragStart, this)
-      this._map.off('locationerror', this.onLocationError, this)
       this._map.off('locationfound', this._onLocationFound, this)
+      this._map.off('locationerror', this._onLocationError, this)
       this._map.options.scrollWheelZoom = true
       this._map.options.doubleClickZoom = true
       this._icon.classList.remove('requesting')
@@ -242,6 +242,11 @@ export default function createPlugin(L) {
       this._lastPosition = e
     },
 
+    _onLocationError: function (e) {
+      this.onLocationError(e)
+    },
+
+    // public method with default behaviour
     onLocationError: function (e) {
       console.error(e)
       if (e.code === 1) {
