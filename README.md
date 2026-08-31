@@ -121,4 +121,4 @@ For more, see the [online demo](https://cdupre.github.io/leaflet.boating)
 
 ## License
 
-[MIT](./LICENSE)
+[GPL](./LICENSE)
