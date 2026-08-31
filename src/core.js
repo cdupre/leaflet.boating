@@ -33,7 +33,8 @@ export default function createPlugin(L) {
             <tr><th>lng</th><td>{lng}</td></tr>
             <tr>
               <td colspan="2">
-                <div class="line one"></div><div class="line two"></div>
+                <div class="line" style="background: {lineColor1}"></div>
+                <div class="line" style="background: {lineColor2}"></div>
                 <div class="hours"><div>0</div><div>1h</div><div>2h</div></div>
               </td>
             </tr>
@@ -60,12 +61,6 @@ export default function createPlugin(L) {
           float: left;
           height: 3px;
           margin-top: 4px;
-        }
-        td div.line.one {
-          background-color: #ffcc00;
-        }
-        td div.line.two {
-          background-color: #3388ff;
         }
         td div.hours {
           width: 100%;
@@ -158,8 +153,8 @@ export default function createPlugin(L) {
       this._map.stopLocate()
       this._map.off('moveend', this._onMoveEnd, this)
       this._map.off('dragstart', this._onDragStart, this)
+      this._map.off('locationerror', this.onLocationError, this)
       this._map.off('locationfound', this._onLocationFound, this)
-      this._map.off('locationerror', this._onLocationError, this)
       this._map.options.scrollWheelZoom = true
       this._map.options.doubleClickZoom = true
       this._icon.classList.remove('requesting')
