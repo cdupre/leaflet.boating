@@ -135,20 +135,23 @@
         link.href = '#';
 
         DomEvent.disableClickPropagation(container);
+
         DomEvent.on(link, 'click', function (e) {
           DomEvent.stopPropagation(e);
           DomEvent.preventDefault(e);
           this._onClick();
         }, this);
 
+        this._saveZoomOptions();
+
         return container
       },
 
       onRemove: function() {
-        this.stop();
+        this._stop();
       },
 
-      start: function () {
+      _start: function () {
         this._map.on('moveend', this._onMoveEnd, this);
         this._map.on('dragstart', this._onDragStart, this);
         this._map.on('locationfound', this._onLocationFound, this);
@@ -161,14 +164,12 @@
         this._motionCache = [];
       },
 
-      stop: function () {
+      _stop: function () {
         this._map.stopLocate();
         this._map.off('moveend', this._onMoveEnd, this);
         this._map.off('dragstart', this._onDragStart, this);
         this._map.off('locationfound', this._onLocationFound, this);
         this._map.off('locationerror', this._onLocationError, this);
-        this._map.options.scrollWheelZoom = true;
-        this._map.options.doubleClickZoom = true;
         this._icon.classList.remove('requesting');
         this._icon.classList.remove('following');
         this._icon.classList.remove('locating');
@@ -177,6 +178,7 @@
         this._map.removeLayer(this._linebg);
         this._map.removeLayer(this._line);
         this._map.removeLayer(this._boat);
+        this._restoreZoomOptions();
       },
 
       _isRequesting: function () {
@@ -193,14 +195,14 @@
 
       _onClick: function () {
         if (this._isFollowing()) {
-          this.stop();
+          this._stop();
         }
         else if (this._isLocating()) {
           this._map.panTo(this._lastPosition.latlng);
           this._follow();
         }
         else if (!this._isRequesting()) {
-          this.start();
+          this._start();
         }
       },
 
@@ -225,11 +227,10 @@
       },
 
       _unfollow: function () {
-        this._map.options.scrollWheelZoom = true;
-        this._map.options.doubleClickZoom = true;
         this._icon.classList.remove('requesting');
         this._icon.classList.remove('following');
         this._icon.classList.add('locating');
+        this._restoreZoomOptions();
       },
 
       _onLocationFound: function (e) {
@@ -263,7 +264,7 @@
         console.error(e);
         if (e.code === 1) {
           alert('unlock geolocation please');
-          this.stop();
+          this._stop();
         }
       },
 
@@ -366,6 +367,18 @@
           speed: Math.sqrt(sumX ** 2 + sumY ** 2) / this._motionCache.length,
           heading: atan2D(sumY, sumX),
         }
+      },
+
+      _saveZoomOptions: function () {
+        this._savedZoomOptions = {
+          scrollWheelZoom: this._map.options.scrollWheelZoom,
+          doubleClickZoom: this._map.options.doubleClickZoom,
+        };
+      },
+
+      _restoreZoomOptions: function () {
+        this._map.options.scrollWheelZoom = this._savedZoomOptions.scrollWheelZoom;
+        this._map.options.doubleClickZoom = this._savedZoomOptions.doubleClickZoom;
       },
     })
   }

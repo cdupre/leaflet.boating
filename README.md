@@ -82,13 +82,6 @@ boating.onLocationError = function (e) {
 }
 ```
 
-### Methods
-
-| Method | Description |
-| --- | --- |
-| `start()` | Begin watching the location (same as clicking the control) |
-| `stop()` | Stop watching and remove the boat, circle, heading line and legend |
-
 ## Development
 
 Feel free to suggest or develop new features or modifications :)
