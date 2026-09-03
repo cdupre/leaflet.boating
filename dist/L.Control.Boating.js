@@ -36,8 +36,7 @@
             <tr><th>lng</th><td>{lng}</td></tr>
             <tr>
               <td colspan="2">
-                <div class="line" style="background: {lineColor1}"></div>
-                <div class="line" style="background: {lineColor2}"></div>
+                <div class="line one"></div><div class="line two"></div>
                 <div class="hours"><div>0</div><div>1h</div><div>2h</div></div>
               </td>
             </tr>
@@ -64,6 +63,12 @@
           float: left;
           height: 3px;
           margin-top: 4px;
+        }
+        td div.line.one {
+          background: #ffcc00;
+        }
+        td div.line.two {
+          background: #3388ff;
         }
         td div.hours {
           width: 100%;
@@ -308,8 +313,6 @@
 
         this._legend.body.innerHTML = Util.template(
           this.options.legendHTML, {
-            lineColor1: this.options.lineColor1,
-            lineColor2: this.options.lineColor2,
             heading: heading + ' °',
             speed: speed + ' kts',
             lat: e.latlngDMS.lat,
