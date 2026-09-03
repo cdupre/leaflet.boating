@@ -1,6 +1,6 @@
 # Leaflet.Boating
 
-A [Leaflet](http://leafletjs.com/) plugin to geolocate the user and display heading, speed and location like a simple navigation app  
+Boating plugin for [Leaflet](http://leafletjs.com/), showing heading, speed and location.  
 Built and tested for Leaflet 1.9.x and 2.0.0-alpha.1
 
 ## Usage
