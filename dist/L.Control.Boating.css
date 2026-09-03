@@ -1,0 +1,28 @@
+.leaflet-control-boating-arrow {
+  width: 30px;
+  height: 30px;
+  display: inline-block;
+  background-image: url(../assets/icon.svg);
+}
+.leaflet-control-boating-arrow.following {
+  background-image: url(../assets/icon.following.svg);
+}
+.leaflet-control-boating-arrow.locating {
+  background-image: url(../assets/icon.locating.svg);
+}
+.leaflet-control-boating-arrow.requesting {
+  background-image: url(../assets/icon.requesting.svg);
+  animation: spin 2s linear infinite;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+body::after { /* preloading icons */
+  position: absolute; width: 0; height: 0; overflow: hidden; z-index: -1;
+  content: url(../assets/icon.svg) url(../assets/icon.locating.svg) url(../assets/icon.following.svg) url(../assets/icon.requesting.svg);
+}
