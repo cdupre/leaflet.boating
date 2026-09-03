@@ -295,11 +295,13 @@ function createPlugin(L) {
         e.latlng.lat + (lengthDeg * cosD(heading)),
         e.latlng.lng + (lengthDeg * sinD(heading) / cosD(e.latlng.lat)),
       );
+
       this._line.setLatLngs([e.latlng, dirPoint]);
       this._linebg.setLatLngs([e.latlng, dirPoint]);
 
       const metersPerPixel = 40000000 * cosD(e.latlng.lat) / (256 * Math.pow(2, zoom));
       const pixelsPerHour = speed / metersPerPixel * 3600;
+
       this._line.setStyle({
         dashArray: pixelsPerHour + ',' + pixelsPerHour,
         dashOffset: pixelsPerHour,
