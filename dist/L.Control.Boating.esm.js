@@ -29,8 +29,8 @@ function createPlugin(L) {
       legendHTML: `
         <table>
           <tbody>
-            <tr><td colspan="2" class="double">{heading}</td></tr>
-            <tr><td colspan="2" class="double">{speed}</td></tr>
+            <tr><td colspan="2" class="double">{heading} &deg;</td></tr>
+            <tr><td colspan="2" class="double">{speed} kts</td></tr>
             <tr><th>lat</th><td>{lat}</td></tr>
             <tr><th>lng</th><td>{lng}</td></tr>
             <tr>
@@ -312,10 +312,10 @@ function createPlugin(L) {
 
       this._legend.body.innerHTML = Util.template(
         this.options.legendHTML, {
-          heading: heading + ' °',
-          speed: speed + ' kts',
           lat: e.latlngDMS.lat,
           lng: e.latlngDMS.lng,
+          heading: heading,
+          speed: speed,
         }
       );
     },
