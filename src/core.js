@@ -215,6 +215,7 @@ export default function createPlugin(L) {
     },
 
     _follow: function () {
+      this._map.options.touchZoom = 'center'
       this._map.options.scrollWheelZoom = 'center'
       this._map.options.doubleClickZoom = 'center'
       this._setState('following')
