@@ -131,6 +131,8 @@ function createPlugin(L) {
       const container = DomUtil.create('div', 'leaflet-bar leaflet-control');
       const link = DomUtil.create('a', 'leaflet-bar-part leaflet-bar-part-single', container);
       this._icon = DomUtil.create('span', 'leaflet-control-boating', link);
+      link.setAttribute('aria-label', 'Boating Control');
+      link.setAttribute('role', 'button');
       link.href = '#';
 
       DomEvent.disableClickPropagation(container);
