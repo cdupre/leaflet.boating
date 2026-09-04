@@ -372,6 +372,7 @@ export default function createPlugin(L) {
 
     _saveZoomOptions: function () {
       this._savedZoomOptions = {
+        touchZoom: this._map.options.touchZoom,
         scrollWheelZoom: this._map.options.scrollWheelZoom,
         doubleClickZoom: this._map.options.doubleClickZoom,
       }
@@ -379,6 +380,7 @@ export default function createPlugin(L) {
 
     _restoreZoomOptions: function () {
       if (this._savedZoomOptions) {
+        this._map.options.touchZoom = this._savedZoomOptions.touchZoom
         this._map.options.scrollWheelZoom = this._savedZoomOptions.scrollWheelZoom
         this._map.options.doubleClickZoom = this._savedZoomOptions.doubleClickZoom
       }
