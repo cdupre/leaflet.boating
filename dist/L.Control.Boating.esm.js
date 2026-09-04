@@ -142,6 +142,7 @@ function createPlugin(L) {
       }, this);
 
       this._saveZoomOptions();
+      this._setState('idle');
 
       return container
     },
@@ -156,9 +157,7 @@ function createPlugin(L) {
       this._map.on('locationfound', this._onLocationFound, this);
       this._map.on('locationerror', this._onLocationError, this);
       this._map.locate({ watch: true, enableHighAccuracy: true });
-      this._icon.classList.remove('following');
-      this._icon.classList.remove('locating');
-      this._icon.classList.add('requesting');
+      this._setState('requesting');
       this._lastPosition = null;
       this._motionCache = [];
     },
@@ -169,50 +168,44 @@ function createPlugin(L) {
       this._map.off('dragstart', this._onDragStart, this);
       this._map.off('locationfound', this._onLocationFound, this);
       this._map.off('locationerror', this._onLocationError, this);
-      this._icon.classList.remove('requesting');
-      this._icon.classList.remove('following');
-      this._icon.classList.remove('locating');
       this._map.removeControl(this._legend);
       this._map.removeLayer(this._circle);
       this._map.removeLayer(this._linebg);
       this._map.removeLayer(this._line);
       this._map.removeLayer(this._boat);
       this._restoreZoomOptions();
+      this._setState('idle');
     },
 
-    _isRequesting: function () {
-      return this._icon.classList.contains('requesting')
-    },
-
-    _isLocating: function () {
-      return this._icon.classList.contains('locating')
-    },
-
-    _isFollowing: function () {
-      return this._icon.classList.contains('following')
+    _setState: function (state) {
+      this._state = state;
+      if (this._icon) {
+        this._icon.classList.remove('idle', 'requesting', 'following', 'locating');
+        this._icon.classList.add(state);
+      }
     },
 
     _onClick: function () {
-      if (this._isFollowing()) {
+      if (this._state === 'following') {
         this._stop();
       }
-      else if (this._isLocating()) {
+      else if (this._state === 'locating') {
         this._map.panTo(this._lastPosition.latlng);
         this._follow();
       }
-      else if (!this._isRequesting()) {
+      else if (this._state !== 'requesting') {
         this._start();
       }
     },
 
     _onDragStart: function () {
-      if (this._isFollowing()) {
+      if (this._state === 'following') {
         this._unfollow();
       }
     },
 
     _onMoveEnd: function () {
-      if ((this._isLocating() || this._isFollowing()) && this._lastPosition) {
+      if ((this._state === 'locating' || this._state === 'following') && this._lastPosition) {
         this._updateLine(this._lastPosition);
       }
     },
@@ -220,23 +213,19 @@ function createPlugin(L) {
     _follow: function () {
       this._map.options.scrollWheelZoom = 'center';
       this._map.options.doubleClickZoom = 'center';
-      this._icon.classList.remove('requesting');
-      this._icon.classList.remove('locating');
-      this._icon.classList.add('following');
+      this._setState('following');
     },
 
     _unfollow: function () {
-      this._icon.classList.remove('requesting');
-      this._icon.classList.remove('following');
-      this._icon.classList.add('locating');
       this._restoreZoomOptions();
+      this._setState('locating');
     },
 
     _onLocationFound: function (e) {
       e.latlngDMS = this._latlngDMS(e);
       e.smooth = this._smoothMotion(e);
 
-      if (this._isRequesting()) {
+      if (this._state === 'requesting') {
         this._map.addControl(this._legend);
         this._map.addLayer(this._circle);
         this._map.addLayer(this._linebg);
@@ -244,7 +233,7 @@ function createPlugin(L) {
         this._map.addLayer(this._boat);
         this._follow();
       }
-      if (this._isFollowing()) {
+      if (this._state === 'following') {
         this._map.panTo(e.latlng);
       }
       this._updateLegend(e);

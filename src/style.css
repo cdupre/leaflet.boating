@@ -2,6 +2,8 @@
   width: 30px;
   height: 30px;
   display: inline-block;
+}
+.leaflet-control-boating-arrow.idle {
   background-image: url(../assets/icon.svg);
 }
 .leaflet-control-boating-arrow.following {
