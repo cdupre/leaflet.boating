@@ -191,7 +191,10 @@ export default function createPlugin(L) {
         this._map.panTo(this._lastPosition.latlng)
         this._follow()
       }
-      else if (this._state !== 'requesting') {
+      else if (this._state === 'requesting') {
+        this._stop()
+      }
+      else {
         this._start()
       }
     },

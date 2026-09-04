@@ -193,7 +193,10 @@ function createPlugin(L) {
         this._map.panTo(this._lastPosition.latlng);
         this._follow();
       }
-      else if (this._state !== 'requesting') {
+      else if (this._state === 'requesting') {
+        this._stop();
+      }
+      else {
         this._start();
       }
     },
@@ -222,6 +225,14 @@ function createPlugin(L) {
     },
 
     _onLocationFound: function (e) {
+      if (this._lastPosition) {
+        if (this._lastPosition.latlng.equals(e.latlng)) {
+          if (this._lastPosition.accuracy === e.accuracy) {
+            return
+          }
+        }
+      }
+
       e.latlngDMS = this._latlngDMS(e);
       e.smooth = this._smoothMotion(e);
 
