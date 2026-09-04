@@ -379,8 +379,10 @@
       },
 
       _restoreZoomOptions: function () {
-        this._map.options.scrollWheelZoom = this._savedZoomOptions.scrollWheelZoom;
-        this._map.options.doubleClickZoom = this._savedZoomOptions.doubleClickZoom;
+        if (this._savedZoomOptions) {
+          this._map.options.scrollWheelZoom = this._savedZoomOptions.scrollWheelZoom;
+          this._map.options.doubleClickZoom = this._savedZoomOptions.doubleClickZoom;
+        }
       },
     })
   }

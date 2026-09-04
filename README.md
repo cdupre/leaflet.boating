@@ -68,7 +68,7 @@ You can personnalize location errors:
 const boating = L.control.boating().addTo(map)
 boating.onLocationError = function (e) {
   console.error(e)
-  boating.stop()
+  boating._stop()
   ...
 }
 
