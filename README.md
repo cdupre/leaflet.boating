@@ -1,7 +1,7 @@
 # Leaflet.Boating
 
 Boating plugin for [Leaflet](http://leafletjs.com/), showing heading, speed and location.  
-Built and tested for Leaflet 1.9.x and 2.0.0-alpha.1
+Built and tested for Leaflet 1.9.x and 2.0.x
 
 ## Usage
 
@@ -36,7 +36,7 @@ new Boating().addTo(map)
 
 ### Options
 
-The boating control inherits options from [Leaflet Controls](https://leafletjs.com/reference.html#control).  
+The boating control inherits options from [Leaflet Control](https://leafletjs.com/reference.html#control).  
 To customize the control, pass an object with your custom options to the boating control.
 
 ```js
@@ -50,21 +50,21 @@ Possible options are listed in the following table
 
 | Option | Type | Description | Default |
 | --- | --- | --- | --- |
-| `position` | `String`  | Position of the control | `topleft` |
-| `circleColor` | `String`  | Circle color | `#3388ff` |
-| `boatColor` | `String`  | Boat color | `#3388ff` |
-| `lineColor1` | `String`  | First color for the line | `#ffcc00` |
-| `lineColor2` | `String`  | Second color for the line | `#3388ff` |
+| `position` | `String`  | position of the control | `topleft` |
+| `circleColor` | `String`  | circle color | `#3388ff` |
+| `boatColor` | `String`  | boat color | `#3388ff` |
+| `lineColor1` | `String`  | first color for the line | `#ffcc00` |
+| `lineColor2` | `String`  | second color for the line | `#3388ff` |
 | `motionCacheLength` | `Number`  | number of averaged GPS samples for smoothest movements | `4` |
-| `legendPosition` | `String`  | Position of the legend | `bottomright` |
-| `legendHTML` | `String`  | Legend HTML rendered with [`L.Util.template`](https://leafletjs.com/reference.html#util-template). Available placeholders: `{heading}`, `{speed}`, `{lat}`, `{lng}` | *(see source in [core.js](src/core.js))* |
-| `legendCSS` | `String`  | Legend styles, injected once and scoped to the legend. Use `:scope` to target the legend container itself | *(see source in [core.js](src/core.js))* |
+| `legendPosition` | `String`  | position of the legend | `bottomright` |
+| `legendHTML` | `String`  | legend HTML rendered with [`L.Util.template`](https://leafletjs.com/reference.html#util-template). Available placeholders: `{heading}`, `{speed}`, `{lat}`, `{lng}` | *(see source in [core.js](src/core.js))* |
+| `legendCSS` | `String`  | legend styles, injected once and scoped to the legend. Use `:scope` to target the legend container itself | *(see source in [core.js](src/core.js))* |
 
 ### Methods
 
 | Method | Description |
 | --- | --- |
-| `stop()` | Stop watching and remove the boat, circle, heading line and legend |
+| `stop()` | stop watching and remove the boat, circle, heading line and legend |
 
 ### Events
 
