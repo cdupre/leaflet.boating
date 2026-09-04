@@ -142,7 +142,6 @@
           this._onClick();
         }, this);
 
-        this._saveZoomOptions();
         this._setState('idle');
 
         return container
@@ -158,9 +157,10 @@
         this._map.on('locationfound', this._onLocationFound, this);
         this._map.on('locationerror', this._onLocationError, this);
         this._map.locate({ watch: true, enableHighAccuracy: true });
-        this._setState('requesting');
         this._lastPosition = null;
         this._motionCache = [];
+        this._saveZoomOptions();
+        this._setState('requesting');
       },
 
       _stop: function () {
