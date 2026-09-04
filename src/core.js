@@ -163,6 +163,7 @@ export default function createPlugin(L) {
     },
 
     stop: function () {
+      if (!this._map) return
       this._map.stopLocate()
       this._map.off('moveend', this._onMoveEnd, this)
       this._map.off('dragstart', this._onDragStart, this)
