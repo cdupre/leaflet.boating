@@ -145,7 +145,7 @@ export default function createPlugin(L) {
     },
 
     onRemove: function() {
-      this._stop()
+      this.stop()
     },
 
     _start: function () {
@@ -160,7 +160,7 @@ export default function createPlugin(L) {
       this._setState('requesting')
     },
 
-    _stop: function () {
+    stop: function () {
       this._map.stopLocate()
       this._map.off('moveend', this._onMoveEnd, this)
       this._map.off('dragstart', this._onDragStart, this)
@@ -185,14 +185,14 @@ export default function createPlugin(L) {
 
     _onClick: function () {
       if (this._state === 'following') {
-        this._stop()
+        this.stop()
       }
       else if (this._state === 'locating') {
         this._map.panTo(this._lastPosition.latlng)
         this._follow()
       }
       else if (this._state === 'requesting') {
-        this._stop()
+        this.stop()
       }
       else {
         this._start()
@@ -261,7 +261,7 @@ export default function createPlugin(L) {
       console.error(e)
       if (e.code === 1) {
         alert('unlock geolocation please')
-        this._stop()
+        this.stop()
       }
     },
 
