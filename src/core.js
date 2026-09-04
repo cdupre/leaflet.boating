@@ -128,7 +128,7 @@ export default function createPlugin(L) {
     onAdd: function (map) {
       const container = DomUtil.create('div', 'leaflet-bar leaflet-control')
       const link = DomUtil.create('a', 'leaflet-bar-part leaflet-bar-part-single', container)
-      this._icon = DomUtil.create('span', 'leaflet-control-boating-arrow', link)
+      this._icon = DomUtil.create('span', 'leaflet-control-boating', link)
       link.href = '#'
 
       DomEvent.disableClickPropagation(container)
@@ -223,6 +223,14 @@ export default function createPlugin(L) {
     },
 
     _onLocationFound: function (e) {
+      if (this._lastPosition) {
+        if (this._lastPosition.latlng.equals(e.latlng)) {
+          if (this._lastPosition.accuracy === e.accuracy) {
+            return
+          }
+        }
+      }
+
       e.latlngDMS = this._latlngDMS(e)
       e.smooth = this._smoothMotion(e)
 

@@ -1,22 +1,22 @@
-.leaflet-control-boating-arrow {
+.leaflet-control-boating {
   width: 30px;
   height: 30px;
   display: inline-block;
 }
-.leaflet-control-boating-arrow.idle {
+.leaflet-control-boating.idle {
   background-image: url(../assets/icon.svg);
 }
-.leaflet-control-boating-arrow.following {
+.leaflet-control-boating.following {
   background-image: url(../assets/icon.following.svg);
 }
-.leaflet-control-boating-arrow.locating {
+.leaflet-control-boating.locating {
   background-image: url(../assets/icon.locating.svg);
 }
-.leaflet-control-boating-arrow.requesting {
+.leaflet-control-boating.requesting {
   background-image: url(../assets/icon.requesting.svg);
-  animation: spin 2s linear infinite;
+  animation: leaflet-control-boating-spin 2s linear infinite;
 }
-@keyframes spin {
+@keyframes leaflet-control-boating-spin {
   0% {
     transform: rotate(0deg);
   }
@@ -24,7 +24,7 @@
     transform: rotate(360deg);
   }
 }
-body::after { /* preloading icons */
+.leaflet-control-boating::after { /* preloading icons */
   position: absolute; width: 0; height: 0; overflow: hidden; z-index: -1;
   content: url(../assets/icon.svg) url(../assets/icon.locating.svg) url(../assets/icon.following.svg) url(../assets/icon.requesting.svg);
 }
