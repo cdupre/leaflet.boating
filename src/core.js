@@ -190,13 +190,13 @@ export default function createPlugin(L) {
       if (this._state === 'idle') {
         this._start()
       }
-      if (this._state === 'requesting') {
+      else if (this._state === 'requesting') {
         this.stop()
       }
-      if (this._state === 'following') {
+      else if (this._state === 'following') {
         this.stop()
       }
-      if (this._state === 'locating') {
+      else if (this._state === 'locating') {
         this._map.panTo(this._lastPosition.latlng)
         this._follow()
       }
