@@ -12,6 +12,63 @@ export default function createPlugin(L) {
     return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360
   }
 
+  function latlngDMS(e) {
+    function dms(coord) {
+      let float = Math.abs(coord)
+      let d = Math.floor(float)
+      float = (float - d) * 60
+      let m = Math.floor(float)
+      float = (float - m) * 60
+      let s = Math.round(float)
+      if (s === 60) {
+        m = m + 1
+        s = 0
+      }
+      if (m === 60) {
+        d = d + 1
+        m = 0
+      }
+      if (s < 10) {
+        s = '0' + s
+      }
+      if (m < 10) {
+        m = '0' + m
+      }
+      return d + '&deg; ' + m + '&apos; ' + s + '&quot; '
+    }
+    return {
+      lat: dms(e.latlng.lat) + ((e.latlng.lat < 0) ? 'S' : 'N'),
+      lng: dms(e.latlng.lng) + ((e.latlng.lng < 0) ? 'W' : 'E'),
+    }
+  }
+
+  function createMotionSmoother(cacheLength) {
+    const cache = []
+
+    function init() {
+      cache.length = 0
+    }
+
+    function add(e) {
+      cache.push(e)
+      if (cache.length > cacheLength) {
+        cache.shift()
+      }
+      const sumX = cache.reduce(
+        (sum, e) => sum + (e.speed || 0) * cosD(e.heading || 0), 0
+      )
+      const sumY = cache.reduce(
+        (sum, e) => sum + (e.speed || 0) * sinD(e.heading || 0), 0
+      )
+      return {
+        speed: Math.sqrt(sumX ** 2 + sumY ** 2) / cache.length,
+        heading: atan2D(sumY, sumX),
+      }
+    }
+
+    return { init, add }
+  }
+
   const { Control, DomUtil, DomEvent, Marker, DivIcon, Circle, Polyline, LatLng, Util } = L
 
   return Control.extend({
@@ -123,6 +180,8 @@ export default function createPlugin(L) {
       this._linebg = new Polyline([[0, 0], [0, 0]], {
         color: this.options.lineColor1,
       })
+
+      this._motionSmoother = createMotionSmoother(this.options.motionCacheLength)
     },
 
     onAdd: function (map) {
@@ -156,8 +215,8 @@ export default function createPlugin(L) {
       this._map.on('locationfound', this._onLocationFound, this)
       this._map.on('locationerror', this._onLocationError, this)
       this._map.locate({ watch: true, enableHighAccuracy: true })
+      this._motionSmoother.init()
       this._lastPosition = null
-      this._motionCache = []
       this._saveZoomOptions()
       this._setState('requesting')
     },
@@ -235,8 +294,8 @@ export default function createPlugin(L) {
         }
       }
 
-      e.latlngDMS = this._latlngDMS(e)
-      e.smooth = this._smoothMotion(e)
+      e.latlngDMS = latlngDMS(e)
+      e.smooth = this._motionSmoother.add(e)
 
       if (this._state === 'requesting') {
         this._map.addControl(this._legend)
@@ -323,53 +382,6 @@ export default function createPlugin(L) {
           speed: speed,
         }
       )
-    },
-
-    _latlngDMS: function (e) {
-      function dms(coord) {
-        let float = Math.abs(coord)
-        let d = Math.floor(float)
-        float = (float - d) * 60
-        let m = Math.floor(float)
-        float = (float - m) * 60
-        let s = Math.round(float)
-        if (s === 60) {
-          m = m + 1
-          s = 0
-        }
-        if (m === 60) {
-          d = d + 1
-          m = 0
-        }
-        if (s < 10) {
-          s = '0' + s
-        }
-        if (m < 10) {
-          m = '0' + m
-        }
-        return d + '&deg; ' + m + '&apos; ' + s + '&quot; '
-      }
-      return {
-        lat: dms(e.latlng.lat) + ((e.latlng.lat > 0) ? 'N' : 'S'),
-        lng: dms(e.latlng.lng) + ((e.latlng.lng > 0) ? 'E' : 'W'),
-      }
-    },
-
-    _smoothMotion: function (e) {
-      this._motionCache.push(e)
-      if (this._motionCache.length > this.options.motionCacheLength) {
-        this._motionCache.shift()
-      }
-      const sumX = this._motionCache.reduce(
-        (sum, e) => sum + (e.speed || 0) * cosD(e.heading || 0), 0
-      )
-      const sumY = this._motionCache.reduce(
-        (sum, e) => sum + (e.speed || 0) * sinD(e.heading || 0), 0
-      )
-      return {
-        speed: Math.sqrt(sumX ** 2 + sumY ** 2) / this._motionCache.length,
-        heading: atan2D(sumY, sumX),
-      }
     },
 
     _saveZoomOptions: function () {
