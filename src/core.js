@@ -187,18 +187,18 @@ export default function createPlugin(L) {
     },
 
     _onClick: function () {
+      if (this._state === 'idle') {
+        this._start()
+      }
+      if (this._state === 'requesting') {
+        this.stop()
+      }
       if (this._state === 'following') {
         this.stop()
       }
-      else if (this._state === 'locating') {
+      if (this._state === 'locating') {
         this._map.panTo(this._lastPosition.latlng)
         this._follow()
-      }
-      else if (this._state === 'requesting') {
-        this.stop()
-      }
-      else {
-        this._start()
       }
     },
 
