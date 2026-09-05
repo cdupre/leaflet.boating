@@ -92,6 +92,8 @@ boating.onLocationError = function (e) {
 
 Feel free to suggest or develop new features or modifications :)
 
+### Files
+
 `src/core.js` got the plugin's logic. The single factory function, `createPlugin()`
 returns the `Boating` control
 
@@ -99,11 +101,29 @@ returns the `Boating` control
 
 `src/esm.js` wrapper to build `dist/L.Control.Boating.esm.js`, for `import`
 
+### States
+
+The control is a small state machine (`idle`, `requesting`, `following`, `locating`), driven by `_start()`, `stop()`, `_follow()` and `_unfollow()` functions:
+
+```mermaid
+stateDiagram-v2
+    [*] --> idle
+    idle --> requesting: _start()
+    requesting --> idle: stop()
+    requesting --> following: _follow()
+    following --> idle: stop()
+    following --> locating: _unfollow()
+    locating --> following: _follow()
+```
+
+### Dev and build
+
 `dist` files are bundled with [Rollup](https://rollupjs.org) (see `rollup.config.js`)
 
 ```
 npm install
-npm run dev     # builds dist/ on every change
+npm run dev     # builds dist files on every change, and serve on port 8080
+npm run build   # builds dist files once
 ```
 During dev, index files are served on [http://localhost:8080/test/](http://localhost:8080/test/). Remember to reload pages manually, no hot reload configured !
 
