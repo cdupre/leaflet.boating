@@ -1,5 +1,9 @@
 export default function createPlugin(L) {
 
+  function isNb(n) {
+    return Number.isFinite(n)
+  }
+
   function cosD(deg) {
     return Math.cos(deg * Math.PI / 180)
   }
@@ -50,15 +54,20 @@ export default function createPlugin(L) {
     }
 
     function add(e) {
-      cache.push(e)
+      if (isNb(e.speed) && isNb(e.heading)) {
+        cache.push(e)
+      }
       if (cache.length > cacheLength) {
         cache.shift()
       }
+      if (cache.length === 0) {
+        return { speed: null, heading: null }
+      }
       const sumX = cache.reduce(
-        (sum, e) => sum + (e.speed || 0) * cosD(e.heading || 0), 0
+        (sum, e) => sum + e.speed * cosD(e.heading), 0
       )
       const sumY = cache.reduce(
-        (sum, e) => sum + (e.speed || 0) * sinD(e.heading || 0), 0
+        (sum, e) => sum + e.speed * sinD(e.heading), 0
       )
       return {
         speed: Math.sqrt(sumX ** 2 + sumY ** 2) / cache.length,
@@ -371,15 +380,15 @@ export default function createPlugin(L) {
 
     _updateLegend: function (e) {
       const nautic = 40000 / 360 / 60
-      const heading = Math.round(e.smooth.heading)
-      const speed = Math.round(e.smooth.speed * 36 / nautic) / 10
+      const heading = e.smooth.heading
+      const speed = e.smooth.speed
 
       this._legend.body.innerHTML = Util.template(
         this.options.legendHTML, {
           lat: e.latlngDMS.lat,
           lng: e.latlngDMS.lng,
-          heading: heading,
-          speed: speed,
+          heading: isNb(heading) ? Math.round(heading) : '--',
+          speed: isNb(speed) ? Math.round(speed * 36 / nautic) / 10 : '--',
         }
       )
     },

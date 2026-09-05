@@ -3,6 +3,10 @@
 
   function createPlugin(L) {
 
+    function isNb(n) {
+      return Number.isFinite(n)
+    }
+
     function cosD(deg) {
       return Math.cos(deg * Math.PI / 180)
     }
@@ -13,6 +17,68 @@
 
     function atan2D(y, x) {
       return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360
+    }
+
+    function latlngDMS(e) {
+      function dms(coord) {
+        let float = Math.abs(coord);
+        let d = Math.floor(float);
+        float = (float - d) * 60;
+        let m = Math.floor(float);
+        float = (float - m) * 60;
+        let s = Math.round(float);
+        if (s === 60) {
+          m = m + 1;
+          s = 0;
+        }
+        if (m === 60) {
+          d = d + 1;
+          m = 0;
+        }
+        if (s < 10) {
+          s = '0' + s;
+        }
+        if (m < 10) {
+          m = '0' + m;
+        }
+        return d + '&deg; ' + m + '&apos; ' + s + '&quot; '
+      }
+      return {
+        lat: dms(e.latlng.lat) + ((e.latlng.lat < 0) ? 'S' : 'N'),
+        lng: dms(e.latlng.lng) + ((e.latlng.lng < 0) ? 'W' : 'E'),
+      }
+    }
+
+    function createMotionSmoother(cacheLength) {
+      const cache = [];
+
+      function init() {
+        cache.length = 0;
+      }
+
+      function add(e) {
+        if (isNb(e.speed) && isNb(e.heading)) {
+          cache.push(e);
+        }
+        if (cache.length > cacheLength) {
+          cache.shift();
+        }
+        if (cache.length === 0) {
+          return { speed: null, heading: null }
+        }
+        const sumX = cache.reduce(
+          (sum, e) => sum + e.speed * cosD(e.heading), 0
+        );
+        const sumY = cache.reduce(
+          (sum, e) => sum + e.speed * sinD(e.heading), 0
+        );
+        return {
+          speed: Math.sqrt(sumX ** 2 + sumY ** 2) / cache.length,
+          heading: atan2D(sumY, sumX),
+        }
+      }
+
+      return { init, add }
     }
 
     const { Control, DomUtil, DomEvent, Marker, DivIcon, Circle, Polyline, LatLng, Util } = L;
@@ -126,6 +192,8 @@
         this._linebg = new Polyline([[0, 0], [0, 0]], {
           color: this.options.lineColor1,
         });
+
+        this._motionSmoother = createMotionSmoother(this.options.motionCacheLength);
       },
 
       onAdd: function (map) {
@@ -159,13 +227,14 @@
         this._map.on('locationfound', this._onLocationFound, this);
         this._map.on('locationerror', this._onLocationError, this);
         this._map.locate({ watch: true, enableHighAccuracy: true });
+        this._motionSmoother.init();
         this._lastPosition = null;
-        this._motionCache = [];
         this._saveZoomOptions();
         this._setState('requesting');
       },
 
       stop: function () {
+        if (!this._map) return
         this._map.stopLocate();
         this._map.off('moveend', this._onMoveEnd, this);
         this._map.off('dragstart', this._onDragStart, this);
@@ -189,18 +258,18 @@
       },
 
       _onClick: function () {
-        if (this._state === 'following') {
+        if (this._state === 'idle') {
+          this._start();
+        }
+        else if (this._state === 'requesting') {
+          this.stop();
+        }
+        else if (this._state === 'following') {
           this.stop();
         }
         else if (this._state === 'locating') {
           this._map.panTo(this._lastPosition.latlng);
           this._follow();
-        }
-        else if (this._state === 'requesting') {
-          this.stop();
-        }
-        else {
-          this._start();
         }
       },
 
@@ -217,6 +286,7 @@
       },
 
       _follow: function () {
+        this._map.options.touchZoom = 'center';
         this._map.options.scrollWheelZoom = 'center';
         this._map.options.doubleClickZoom = 'center';
         this._setState('following');
@@ -236,8 +306,8 @@
           }
         }
 
-        e.latlngDMS = this._latlngDMS(e);
-        e.smooth = this._smoothMotion(e);
+        e.latlngDMS = latlngDMS(e);
+        e.smooth = this._motionSmoother.add(e);
 
         if (this._state === 'requesting') {
           this._map.addControl(this._legend);
@@ -313,68 +383,22 @@
 
       _updateLegend: function (e) {
         const nautic = 40000 / 360 / 60;
-        const heading = Math.round(e.smooth.heading);
-        const speed = Math.round(e.smooth.speed * 36 / nautic) / 10;
+        const heading = e.smooth.heading;
+        const speed = e.smooth.speed;
 
         this._legend.body.innerHTML = Util.template(
           this.options.legendHTML, {
             lat: e.latlngDMS.lat,
             lng: e.latlngDMS.lng,
-            heading: heading,
-            speed: speed,
+            heading: isNb(heading) ? Math.round(heading) : '--',
+            speed: isNb(speed) ? Math.round(speed * 36 / nautic) / 10 : '--',
           }
         );
-      },
-
-      _latlngDMS: function (e) {
-        function dms(coord) {
-          let float = Math.abs(coord);
-          let d = Math.floor(float);
-          float = (float - d) * 60;
-          let m = Math.floor(float);
-          float = (float - m) * 60;
-          let s = Math.round(float);
-          if (s === 60) {
-            m = m + 1;
-            s = 0;
-          }
-          if (m === 60) {
-            d = d + 1;
-            m = 0;
-          }
-          if (s < 10) {
-            s = '0' + s;
-          }
-          if (m < 10) {
-            m = '0' + m;
-          }
-          return d + '&deg; ' + m + '&apos; ' + s + '&quot; '
-        }
-        return {
-          lat: dms(e.latlng.lat) + ((e.latlng.lat > 0) ? 'N' : 'S'),
-          lng: dms(e.latlng.lng) + ((e.latlng.lng > 0) ? 'E' : 'W'),
-        }
-      },
-
-      _smoothMotion: function (e) {
-        this._motionCache.push(e);
-        if (this._motionCache.length > this.options.motionCacheLength) {
-          this._motionCache.shift();
-        }
-        const sumX = this._motionCache.reduce(
-          (sum, e) => sum + (e.speed || 0) * cosD(e.heading || 0), 0
-        );
-        const sumY = this._motionCache.reduce(
-          (sum, e) => sum + (e.speed || 0) * sinD(e.heading || 0), 0
-        );
-        return {
-          speed: Math.sqrt(sumX ** 2 + sumY ** 2) / this._motionCache.length,
-          heading: atan2D(sumY, sumX),
-        }
       },
 
       _saveZoomOptions: function () {
         this._savedZoomOptions = {
+          touchZoom: this._map.options.touchZoom,
           scrollWheelZoom: this._map.options.scrollWheelZoom,
           doubleClickZoom: this._map.options.doubleClickZoom,
         };
@@ -382,6 +406,7 @@
 
       _restoreZoomOptions: function () {
         if (this._savedZoomOptions) {
+          this._map.options.touchZoom = this._savedZoomOptions.touchZoom;
           this._map.options.scrollWheelZoom = this._savedZoomOptions.scrollWheelZoom;
           this._map.options.doubleClickZoom = this._savedZoomOptions.doubleClickZoom;
         }
