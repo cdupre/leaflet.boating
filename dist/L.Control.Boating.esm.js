@@ -71,8 +71,11 @@ function createPlugin(L) {
       const sumY = cache.reduce(
         (sum, e) => sum + e.speed * sinD(e.heading), 0
       );
+      const sumSpeed = cache.reduce(
+        (sum, e) => sum + e.speed, 0
+      );
       return {
-        speed: Math.sqrt(sumX ** 2 + sumY ** 2) / cache.length,
+        speed: sumSpeed / cache.length,
         heading: atan2D(sumY, sumX),
       }
     }
