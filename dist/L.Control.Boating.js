@@ -221,7 +221,7 @@
       },
 
       onRemove: function() {
-        this.stop();
+        this._stop();
       },
 
       _start: function () {
@@ -236,7 +236,7 @@
         this._setState('requesting');
       },
 
-      stop: function () {
+      _stop: function () {
         if (!this._map) return
         this._map.stopLocate();
         this._map.off('moveend', this._onMoveEnd, this);
@@ -265,10 +265,10 @@
           this._start();
         }
         else if (this._state === 'requesting') {
-          this.stop();
+          this._stop();
         }
         else if (this._state === 'following') {
-          this.stop();
+          this._stop();
         }
         else if (this._state === 'locating') {
           this._map.panTo(this._lastPosition.latlng);
@@ -331,15 +331,16 @@
       },
 
       _onLocationError: function (e) {
+        if (e.code === 1) {
+          this._stop();
+        }
         this.onLocationError(e);
       },
 
       // public method with default behaviour
       onLocationError: function (e) {
-        console.error(e);
         if (e.code === 1) {
           alert('unlock geolocation please');
-          this.stop();
         }
       },
 
