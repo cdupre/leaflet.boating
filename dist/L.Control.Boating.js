@@ -41,7 +41,7 @@
         if (m < 10) {
           m = '0' + m;
         }
-        return d + '&deg; ' + m + '&apos; ' + s + '&quot; '
+        return d + '° ' + m + '\' ' + s + '" '
       }
       return {
         lat: dms(e.latlng.lat) + ((e.latlng.lat < 0) ? 'S' : 'N'),
