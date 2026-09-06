@@ -338,6 +338,7 @@ function createPlugin(L) {
 
     // public method with default behaviour
     onLocationError: function (e) {
+      console.error(e);
       if (e.code === 1) {
         alert('unlock geolocation please');
       }
