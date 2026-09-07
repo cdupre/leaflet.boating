@@ -81,7 +81,7 @@ export default function createPlugin(L) {
     return { init, add }
   }
 
-  const { Control, DomUtil, DomEvent, Marker, DivIcon, Circle, Polyline, LatLng, Util } = L
+  const { Control, DomUtil, DomEvent, Marker, DivIcon, Circle, Polyline, Util } = L
 
   return Control.extend({
 
