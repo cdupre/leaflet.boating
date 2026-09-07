@@ -83,7 +83,7 @@ function createPlugin(L) {
     return { init, add }
   }
 
-  const { Control, DomUtil, DomEvent, Marker, DivIcon, Circle, Polyline, LatLng, Util } = L;
+  const { Control, DomUtil, DomEvent, Marker, DivIcon, Circle, Polyline, Util } = L;
 
   return Control.extend({
 
@@ -356,28 +356,28 @@ function createPlugin(L) {
     },
 
     _updateLine: function (e) {
-      const zoom = this._map.getZoom();
-      const mapBounds = this._map.getBounds();
-      const heading = e.smooth.heading;
       const speed = e.smooth.speed;
+      const heading = e.smooth.heading;
 
-      const length = Math.max(
-        mapBounds.getNorthWest().distanceTo(e.latlng),
-        mapBounds.getNorthEast().distanceTo(e.latlng),
-        mapBounds.getSouthEast().distanceTo(e.latlng),
-        mapBounds.getSouthWest().distanceTo(e.latlng),
+      const loc = this._map.project(e.latlng);
+      const bounds = this._map.getPixelBounds();
+
+      const len = Math.max(
+        loc.distanceTo([bounds.max.x, bounds.max.y]),
+        loc.distanceTo([bounds.max.x, bounds.min.y]),
+        loc.distanceTo([bounds.min.x, bounds.max.y]),
+        loc.distanceTo([bounds.min.x, bounds.min.y]),
       );
-      const lengthDeg = length * 360 / 40000000;
-      const dirPoint = new LatLng(
-        e.latlng.lat + (lengthDeg * cosDeg(heading)),
-        e.latlng.lng + (lengthDeg * sinDeg(heading) / cosDeg(e.latlng.lat)),
-      );
+      const tip = this._map.unproject([
+        loc.x + sinDeg(heading) * len,
+        loc.y - cosDeg(heading) * len,
+      ]);
 
-      this._line.setLatLngs([e.latlng, dirPoint]);
-      this._linebg.setLatLngs([e.latlng, dirPoint]);
+      this._line.setLatLngs([e.latlng, tip]);
+      this._linebg.setLatLngs([e.latlng, tip]);
 
-      const metersPerPixel = 40000000 * cosDeg(e.latlng.lat) / (256 * Math.pow(2, zoom));
-      const pixelsPerHour = speed / metersPerPixel * 3600;
+      const lineMeters = e.latlng.distanceTo(tip);
+      const pixelsPerHour = 3600 * speed * len / lineMeters;
 
       this._line.setStyle({
         dashArray: pixelsPerHour + ',' + pixelsPerHour,
