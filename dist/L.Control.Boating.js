@@ -7,15 +7,15 @@
       return Number.isFinite(n)
     }
 
-    function cosD(deg) {
-      return Math.cos(deg * Math.PI / 180)
+    function cosDeg(d) {
+      return Math.cos(d * Math.PI / 180)
     }
 
-    function sinD(deg) {
-      return Math.sin(deg * Math.PI / 180)
+    function sinDeg(d) {
+      return Math.sin(d * Math.PI / 180)
     }
 
-    function atan2D(y, x) {
+    function atan2Deg(y, x) {
       return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360
     }
 
@@ -67,17 +67,17 @@
           return { speed: null, heading: null }
         }
         const sumX = cache.reduce(
-          (sum, e) => sum + e.speed * cosD(e.heading), 0
+          (sum, e) => sum + e.speed * cosDeg(e.heading), 0
         );
         const sumY = cache.reduce(
-          (sum, e) => sum + e.speed * sinD(e.heading), 0
+          (sum, e) => sum + e.speed * sinDeg(e.heading), 0
         );
         const sumSpeed = cache.reduce(
           (sum, e) => sum + e.speed, 0
         );
         return {
           speed: sumSpeed / cache.length,
-          heading: atan2D(sumY, sumX),
+          heading: atan2Deg(sumY, sumX),
         }
       }
 
@@ -370,14 +370,14 @@
         );
         const lengthDeg = length * 360 / 40000000;
         const dirPoint = new LatLng(
-          e.latlng.lat + (lengthDeg * cosD(heading)),
-          e.latlng.lng + (lengthDeg * sinD(heading) / cosD(e.latlng.lat)),
+          e.latlng.lat + (lengthDeg * cosDeg(heading)),
+          e.latlng.lng + (lengthDeg * sinDeg(heading) / cosDeg(e.latlng.lat)),
         );
 
         this._line.setLatLngs([e.latlng, dirPoint]);
         this._linebg.setLatLngs([e.latlng, dirPoint]);
 
-        const metersPerPixel = 40000000 * cosD(e.latlng.lat) / (256 * Math.pow(2, zoom));
+        const metersPerPixel = 40000000 * cosDeg(e.latlng.lat) / (256 * Math.pow(2, zoom));
         const pixelsPerHour = speed / metersPerPixel * 3600;
 
         this._line.setStyle({
