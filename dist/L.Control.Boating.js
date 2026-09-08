@@ -312,13 +312,13 @@
           if (this._lastPosition.timestamp === e.timestamp) {
             return
           }
-          // if (this._lastPosition.latlng.lat === e.latlng.lat) {
-          //   if (this._lastPosition.latlng.lng === e.latlng.lng) {
-          //     if (this._lastPosition.accuracy === e.accuracy) {
-          //       return
-          //     }
-          //   }
-          // }
+          if (this._lastPosition.latlng.lat === e.latlng.lat) {
+            if (this._lastPosition.latlng.lng === e.latlng.lng) {
+              if (this._lastPosition.accuracy === e.accuracy) {
+                return
+              }
+            }
+          }
         }
 
         e.latlngDMS = latlngDMS(e);
