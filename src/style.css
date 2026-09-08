@@ -1,22 +1,25 @@
-.leaflet-control-boating {
-  width: 30px;
-  height: 30px;
-  display: inline-block;
+.leaflet-control-boating .icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+  background-size: contain;
 }
-.leaflet-control-boating.idle {
+.leaflet-control-boating .icon.idle {
   background-image: url(../assets/icon.svg);
 }
-.leaflet-control-boating.following {
+.leaflet-control-boating .icon.following {
   background-image: url(../assets/icon.following.svg);
 }
-.leaflet-control-boating.locating {
+.leaflet-control-boating .icon.locating {
   background-image: url(../assets/icon.locating.svg);
 }
-.leaflet-control-boating.requesting {
+.leaflet-control-boating .icon.requesting {
   background-image: url(../assets/icon.requesting.svg);
-  animation: leaflet-control-boating-spin 2s linear infinite;
+  animation: boating-icon-spin 2s linear infinite;
 }
-@keyframes leaflet-control-boating-spin {
+@keyframes boating-icon-spin {
   0% {
     transform: rotate(0deg);
   }

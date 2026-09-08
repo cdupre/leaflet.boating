@@ -1,87 +1,87 @@
 import * as leaflet from 'leaflet';
 
-function createPlugin(L) {
+function isNb(n) {
+  return Number.isFinite(n)
+}
 
-  function isNb(n) {
-    return Number.isFinite(n)
-  }
+function cosDeg(d) {
+  return Math.cos(d * Math.PI / 180)
+}
 
-  function cosDeg(d) {
-    return Math.cos(d * Math.PI / 180)
-  }
+function sinDeg(d) {
+  return Math.sin(d * Math.PI / 180)
+}
 
-  function sinDeg(d) {
-    return Math.sin(d * Math.PI / 180)
-  }
+function atan2Deg(y, x) {
+  return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360
+}
 
-  function atan2Deg(y, x) {
-    return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360
-  }
-
-  function latlngDMS(e) {
-    function dms(coord) {
-      let float = Math.abs(coord);
-      let d = Math.floor(float);
-      float = (float - d) * 60;
-      let m = Math.floor(float);
-      float = (float - m) * 60;
-      let s = Math.round(float);
-      if (s === 60) {
-        m = m + 1;
-        s = 0;
-      }
-      if (m === 60) {
-        d = d + 1;
-        m = 0;
-      }
-      if (s < 10) {
-        s = '0' + s;
-      }
-      if (m < 10) {
-        m = '0' + m;
-      }
-      return d + '° ' + m + '\' ' + s + '" '
+function latlngDMS(e) {
+  function dms(coord) {
+    let float = Math.abs(coord);
+    let d = Math.floor(float);
+    float = (float - d) * 60;
+    let m = Math.floor(float);
+    float = (float - m) * 60;
+    let s = Math.round(float);
+    if (s === 60) {
+      m = m + 1;
+      s = 0;
     }
+    if (m === 60) {
+      d = d + 1;
+      m = 0;
+    }
+    if (s < 10) {
+      s = '0' + s;
+    }
+    if (m < 10) {
+      m = '0' + m;
+    }
+    return d + '° ' + m + '\' ' + s + '" '
+  }
+  return {
+    lat: dms(e.latlng.lat) + ((e.latlng.lat < 0) ? 'S' : 'N'),
+    lng: dms(e.latlng.lng) + ((e.latlng.lng < 0) ? 'W' : 'E'),
+  }
+}
+
+function createMotionSmoother(cacheLength, cacheMaxAge) {
+  const cache = [];
+
+  function clear() {
+    cache.length = 0;
+  }
+
+  function add(e) {
+    if (isNb(e.speed) && isNb(e.heading)) {
+      cache.push(e);
+    }
+    while (cache[0] && ((e.timestamp - cache[0].timestamp) > cacheMaxAge)) {
+      cache.shift();
+    }
+    if (cache.length > cacheLength) {
+      cache.shift();
+    }
+    if (cache.length === 0) {
+      return { speed: null, heading: null }
+    }
+    const sumX = cache.reduce(
+      (sum, e) => sum + e.speed * cosDeg(e.heading), 0
+    );
+    const sumY = cache.reduce(
+      (sum, e) => sum + e.speed * sinDeg(e.heading), 0
+    );
     return {
-      lat: dms(e.latlng.lat) + ((e.latlng.lat < 0) ? 'S' : 'N'),
-      lng: dms(e.latlng.lng) + ((e.latlng.lng < 0) ? 'W' : 'E'),
+      heading: atan2Deg(sumY, sumX),
+      speed: Math.sqrt(sumX ** 2 + sumY ** 2) / cache.length,
     }
   }
 
-  function createMotionSmoother(cacheLength, cacheMaxAge) {
-    const cache = [];
+  return { clear, add }
+}
 
-    function clear() {
-      cache.length = 0;
-    }
-
-    function add(e) {
-      if (isNb(e.speed) && isNb(e.heading)) {
-        cache.push(e);
-      }
-      while (cache[0] && ((e.timestamp - cache[0].timestamp) > (cacheMaxAge * 1000))) {
-        cache.shift();
-      }
-      if (cache.length > cacheLength) {
-        cache.shift();
-      }
-      if (cache.length === 0) {
-        return { speed: null, heading: null }
-      }
-      const sumX = cache.reduce(
-        (sum, e) => sum + e.speed * cosDeg(e.heading), 0
-      );
-      const sumY = cache.reduce(
-        (sum, e) => sum + e.speed * sinDeg(e.heading), 0
-      );
-      return {
-        heading: atan2Deg(sumY, sumX),
-        speed: Math.sqrt(sumX ** 2 + sumY ** 2) / cache.length,
-      }
-    }
-
-    return { clear, add }
-  }
+function createPlugin(L) {
 
   const { Control, DomUtil, DomEvent, Marker, DivIcon, Circle, Polyline, Util } = L;
 
@@ -94,7 +94,7 @@ function createPlugin(L) {
       lineColor1: '#ffcc00',
       lineColor2: '#3388ff',
       motionCacheLength: 4,
-      motionCacheMaxAge: 10,
+      motionCacheMaxAge: 10000,
       legendPosition: 'bottomright',
       legendHTML: `
         <table>
@@ -207,8 +207,8 @@ function createPlugin(L) {
 
     onAdd: function (map) {
       const container = DomUtil.create('div', 'leaflet-bar leaflet-control');
-      const link = DomUtil.create('a', 'leaflet-bar-part leaflet-bar-part-single', container);
-      this._icon = DomUtil.create('span', 'leaflet-control-boating', link);
+      const link = DomUtil.create('a', 'leaflet-control-boating', container);
+      this._icon = DomUtil.create('span', 'icon', link);
       link.setAttribute('aria-label', 'Boating Control');
       link.setAttribute('role', 'button');
       link.href = '#';
@@ -310,13 +310,6 @@ function createPlugin(L) {
       if (this._lastPosition) {
         if (this._lastPosition.timestamp === e.timestamp) {
           return
-        }
-        if (this._lastPosition.latlng.lat === e.latlng.lat) {
-          if (this._lastPosition.latlng.lng === e.latlng.lng) {
-            if (this._lastPosition.accuracy === e.accuracy) {
-              return
-            }
-          }
         }
       }
 

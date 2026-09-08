@@ -1,4 +1,4 @@
-# Leaflet.Boating
+# <img src="favicon.svg" alt="Leaflet.Boating logo" height="32" align="top"> Leaflet.Boating
 
 Boating plugin for [Leaflet](http://leafletjs.com/), showing heading, speed and location.  
 Built and tested for Leaflet 1.9.x and 2.0.x
@@ -56,7 +56,7 @@ Possible options are listed in the following table
 | `lineColor1` | `string`  | first color for the line | `#ffcc00` |
 | `lineColor2` | `string`  | second color for the line | `#3388ff` |
 | `motionCacheLength` | `number`  | maximum number of averaged GPS points for smoothest movements | `4` |
-| `motionCacheMaxAge` | `number`  | max age in seconds for the averaged GPS points for smoothest movements, applied at the time of calculation, not afterwards. | `10` |
+| `motionCacheMaxAge` | `number`  | max age in milliseconds for the averaged GPS points for smoothest movements, applied at the time of calculation, not afterwards. | `10000` |
 | `legendPosition` | `string`  | position of the legend | `bottomright` |
 | `legendHTML` | `string`  | legend HTML rendered with [`L.Util.template`](https://leafletjs.com/reference.html#util-template). Available placeholders: `{heading}`, `{speed}`, `{lat}`, `{lng}` | *(see source in [core.js](src/core.js))* |
 | `legendCSS` | `string`  | legend styles, injected once and scoped to the legend. Use `:scope` to target the legend container itself | *(see source in [core.js](src/core.js))* |
@@ -100,6 +100,10 @@ npm run dev     # builds dist files on every change, and serve on port 8080
 npm run build   # builds dist files once
 ```
 During dev, index files are served on [http://localhost:8080/test/](http://localhost:8080/test/). Remember to reload pages manually, no hot reload configured !
+
+### Unit tests
+
+`npm run test` runs `test/core.test.js`, testing the pure helpers exported from `src/core.js` (angle math, coordinate formatting, motion smoothing)
 
 ## Demo
 

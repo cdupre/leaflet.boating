@@ -44,6 +44,7 @@
   },
   "scripts": {
     "build": "rollup -c",
+    "test": "node --test",
     "dev": "rollup -c -w & http-server . -d -p 8080",
     "prepublishOnly": "npm run build"
   },
