@@ -50,35 +50,17 @@ Possible options are listed in the following table
 
 | Option | Type | Description | Default |
 | --- | --- | --- | --- |
-| `position` | `String`  | position of the control | `topleft` |
-| `circleColor` | `String`  | circle color | `#3388ff` |
-| `boatColor` | `String`  | boat color | `#3388ff` |
-| `lineColor1` | `String`  | first color for the line | `#ffcc00` |
-| `lineColor2` | `String`  | second color for the line | `#3388ff` |
-| `motionCacheLength` | `Number`  | number of averaged GPS samples for smoothest movements | `4` |
-| `legendPosition` | `String`  | position of the legend | `bottomright` |
-| `legendHTML` | `String`  | legend HTML rendered with [`L.Util.template`](https://leafletjs.com/reference.html#util-template). Available placeholders: `{heading}`, `{speed}`, `{lat}`, `{lng}` | *(see source in [core.js](src/core.js))* |
-| `legendCSS` | `String`  | legend styles, injected once and scoped to the legend. Use `:scope` to target the legend container itself | *(see source in [core.js](src/core.js))* |
-
-### Events
-
-You can personnalize location errors:
-
-```js
-const boating = L.control.boating().addTo(map)
-boating.onLocationError = function (e) {
-  console.error(e)
-  ...
-}
-
-or
-
-const boating = new Boating().addTo(map)
-boating.onLocationError = function (e) {
-  console.error(e)
-  ...
-}
-```
+| `position` | `string`  | position of the control | `topleft` |
+| `circleColor` | `string`  | circle color | `#3388ff` |
+| `boatColor` | `string`  | boat color | `#3388ff` |
+| `lineColor1` | `string`  | first color for the line | `#ffcc00` |
+| `lineColor2` | `string`  | second color for the line | `#3388ff` |
+| `motionCacheLength` | `number`  | maximum number of averaged GPS points for smoothest movements | `4` |
+| `motionCacheMaxAge` | `number`  | max age in seconds for the averaged GPS points for smoothest movements, applied at the time of calculation, not afterwards. | `10` |
+| `legendPosition` | `string`  | position of the legend | `bottomright` |
+| `legendHTML` | `string`  | legend HTML rendered with [`L.Util.template`](https://leafletjs.com/reference.html#util-template). Available placeholders: `{heading}`, `{speed}`, `{lat}`, `{lng}` | *(see source in [core.js](src/core.js))* |
+| `legendCSS` | `string`  | legend styles, injected once and scoped to the legend. Use `:scope` to target the legend container itself | *(see source in [core.js](src/core.js))* |
+| `onLocationError` | `function`  | called on location errors, receives the [`ErrorEvent`](https://leafletjs.com/reference.html#errorevent) | *(see source in [core.js](src/core.js))* |
 
 ## Development
 
@@ -95,15 +77,15 @@ returns the `Boating` control
 
 ### States
 
-The control is a small state machine (`idle`, `requesting`, `following`, `locating`), driven by `_start()`, `stop()`, `_follow()` and `_unfollow()` functions:
+The control is a small state machine (`idle`, `requesting`, `following`, `locating`), driven by `_start()`, `_stop()`, `_follow()` and `_unfollow()` functions:
 
 ```mermaid
 stateDiagram-v2
     [*] --> idle
     idle --> requesting: _start()
-    requesting --> idle: stop()
+    requesting --> idle: _stop()
     requesting --> following: _follow()
-    following --> idle: stop()
+    following --> idle: _stop()
     following --> locating: _unfollow()
     locating --> following: _follow()
 ```

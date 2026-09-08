@@ -48,16 +48,19 @@ function createPlugin(L) {
     }
   }
 
-  function createMotionSmoother(cacheLength) {
+  function createMotionSmoother(cacheLength, cacheMaxAge) {
     const cache = [];
 
-    function init() {
+    function clear() {
       cache.length = 0;
     }
 
     function add(e) {
       if (isNb(e.speed) && isNb(e.heading)) {
         cache.push(e);
+      }
+      while (cache[0] && ((e.timestamp - cache[0].timestamp) > (cacheMaxAge * 1000))) {
+        cache.shift();
       }
       if (cache.length > cacheLength) {
         cache.shift();
@@ -77,7 +80,7 @@ function createPlugin(L) {
       }
     }
 
-    return { init, add }
+    return { clear, add }
   }
 
   const { Control, DomUtil, DomEvent, Marker, DivIcon, Circle, Polyline, Util } = L;
@@ -91,6 +94,7 @@ function createPlugin(L) {
       lineColor1: '#ffcc00',
       lineColor2: '#3388ff',
       motionCacheLength: 4,
+      motionCacheMaxAge: 10,
       legendPosition: 'bottomright',
       legendHTML: `
         <table>
@@ -142,6 +146,9 @@ function createPlugin(L) {
           justify-content: space-between;
         }
       `,
+      onLocationError(e) {
+        console.error(e);
+      },
     },
 
     initialize: function (options) {
@@ -192,7 +199,10 @@ function createPlugin(L) {
         color: this.options.lineColor1,
       });
 
-      this._motionSmoother = createMotionSmoother(this.options.motionCacheLength);
+      this._motionSmoother = createMotionSmoother(
+        this.options.motionCacheLength,
+        this.options.motionCacheMaxAge,
+      );
     },
 
     onAdd: function (map) {
@@ -226,7 +236,7 @@ function createPlugin(L) {
       this._map.on('locationfound', this._onLocationFound, this);
       this._map.on('locationerror', this._onLocationError, this);
       this._map.locate({ watch: true, enableHighAccuracy: true });
-      this._motionSmoother.init();
+      this._motionSmoother.clear();
       this._lastPosition = null;
       this._saveZoomOptions();
       this._setState('requesting');
@@ -298,11 +308,16 @@ function createPlugin(L) {
 
     _onLocationFound: function (e) {
       if (this._lastPosition) {
-        if (this._lastPosition.latlng.equals(e.latlng)) {
-          if (this._lastPosition.accuracy === e.accuracy) {
-            return
-          }
+        if (this._lastPosition.timestamp === e.timestamp) {
+          return
         }
+        // if (this._lastPosition.latlng.lat === e.latlng.lat) {
+        //   if (this._lastPosition.latlng.lng === e.latlng.lng) {
+        //     if (this._lastPosition.accuracy === e.accuracy) {
+        //       return
+        //     }
+        //   }
+        // }
       }
 
       e.latlngDMS = latlngDMS(e);
@@ -327,18 +342,8 @@ function createPlugin(L) {
     },
 
     _onLocationError: function (e) {
-      if (e.code === 1) {
-        this._stop();
-      }
-      this.onLocationError(e);
-    },
-
-    // public method with default behaviour
-    onLocationError: function (e) {
-      console.error(e);
-      if (e.code === 1) {
-        alert('unlock geolocation please');
-      }
+      if (e.code === 1) this._stop();
+      this.options.onLocationError(e);
     },
 
     _updateCircle: function (e) {
@@ -347,7 +352,7 @@ function createPlugin(L) {
     },
 
     _updateBoat: function (e) {
-      const heading = e.smooth.heading;
+      const heading = e.smooth.heading || 0;
       this._boat._svg.style.transform = 'rotate(' + heading + 'deg)';
       this._boat.setLatLng(e.latlng);
     },
