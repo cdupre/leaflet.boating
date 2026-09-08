@@ -140,6 +140,9 @@ export default function createPlugin(L) {
           justify-content: space-between;
         }
       `,
+      onLocationError(e) {
+        console.error(e)
+      },
     },
 
     initialize: function (options) {
@@ -325,18 +328,8 @@ export default function createPlugin(L) {
     },
 
     _onLocationError: function (e) {
-      if (e.code === 1) {
-        this._stop()
-      }
-      this.onLocationError(e)
-    },
-
-    // public method with default behaviour
-    onLocationError: function (e) {
-      console.error(e)
-      if (e.code === 1) {
-        alert('unlock geolocation please')
-      }
+      if (e.code === 1) this._stop()
+      this.options.onLocationError(e)
     },
 
     _updateCircle: function (e) {
