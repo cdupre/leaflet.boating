@@ -33,14 +33,16 @@
     const NOAA = L.tileLayer(
       "https://gis.charttools.noaa.gov/arcgis/rest/services/MarineChart_Services/NOAACharts" +
       "/MapServer/WMTS/tile/1.0.0/MarineChart_Services_NOAACharts" +
-      "/default/default028mm/{z}/{y}/{x}.png",
-      {
-        zoomOffset: -2,
-        minNativeZoom: 2,
-        maxNativeZoom: 18,
-        attribution: '&copy; <a href="https://nauticalcharts.noaa.gov/">NOAA Office of Coast Survey</a>'
-      }
-    )
+      "/default/default028mm/{z}/{y}/{x}.png", {
+      zoomOffset: -2,
+      minNativeZoom: 2,
+      maxNativeZoom: 18,
+      attribution: '&copy; <a href="https://nauticalcharts.noaa.gov/">NOAA Office of Coast Survey</a>'
+    })
+
+    const kartverket = L.tileLayer('https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png', {
+      attribution: '© Kartverket',
+    })
 
     const marks = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png')
 
@@ -52,7 +54,8 @@
 
     L.control.layers({
       "OpenStreetMap": OSM,
-      "NOAA Charts (US only)": NOAA
+      "NOAA Charts (US only)": NOAA,
+      "Kartverket (Norway only)": kartverket
     }, {
       "Sea Marks": marks
     }).addTo(map)
