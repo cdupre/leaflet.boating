@@ -30,7 +30,7 @@
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     })
 
-    const noaaCharts = L.tileLayer(
+    const NOAA = L.tileLayer(
       "https://gis.charttools.noaa.gov/arcgis/rest/services/MarineChart_Services/NOAACharts" +
       "/MapServer/WMTS/tile/1.0.0/MarineChart_Services_NOAACharts" +
       "/default/default028mm/{z}/{y}/{x}.png",
@@ -42,19 +42,19 @@
       }
     )
 
-    const seaMarks = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png')
+    const marks = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png')
 
     const map = L.map('map', {
       center: [47.2, -2.30],
-      layers: [OSM, seaMarks],
+      layers: [OSM, marks],
       zoom: 10,
     })
 
     L.control.layers({
       "OpenStreetMap": OSM,
-      "NOAA Charts (US only)": noaaCharts
+      "NOAA Charts (US only)": NOAA
     }, {
-      "Sea Marks": seaMarks
+      "Sea Marks": marks
     }).addTo(map)
 
     L.control.boating().addTo(map)
