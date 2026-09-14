@@ -1,6 +1,6 @@
 {
   "name": "leaflet.boating",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Boating plugin for Leaflet, showing heading, speed and location.",
   "type": "module",
   "main": "dist/L.Control.Boating.esm.js",
