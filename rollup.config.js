@@ -4,7 +4,7 @@ function copyCss() {
   return {
     buildEnd() {
       mkdirSync('dist', { recursive: true })
-      copyFileSync('src/style.css', 'dist/L.Control.Boating.css')
+      copyFileSync('src/Control.Boating.css', 'dist/L.Control.Boating.css')
     },
   }
 }
@@ -24,8 +24,12 @@ export default [
     output: {
       file: 'dist/L.Control.Boating.js',
       format: 'iife',
-      name: 'LeafletBoatingIIFE',
+      name: 'ControlBoating',
+      globals: {
+        leaflet: 'L',
+      },
     },
     plugins: [copyCss()],
+    external: ['leaflet'],
   },
 ]

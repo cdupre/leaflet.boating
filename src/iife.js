@@ -1,9 +1,12 @@
-import createPlugin from './core.js'
+import { ControlBoating } from './Control.Boating.js'
 
-const Boating = createPlugin(window.L)
-
-window.L.Control.Boating = Boating
-
-if (window.L.control) {
-  window.L.control.boating = (opt) => new Boating(opt)
+if (window.L) {
+  if (window.L.Control) {
+    window.L.Control.Boating = ControlBoating
+  }
+  if (window.L.control) {
+    window.L.control.boating = function(opt) {
+      return new ControlBoating(opt)
+    }
+  }
 }
