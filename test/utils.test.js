@@ -8,7 +8,7 @@ import {
   atan2Deg,
   latlngDMS,
   createMotionSmoother,
-} from '../src/core.js'
+} from '../src/utils.js'
 
 const EPS = 1e-9
 

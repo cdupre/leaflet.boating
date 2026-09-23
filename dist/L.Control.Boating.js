@@ -1,4 +1,4 @@
-(function () {
+(function (leaflet) {
   'use strict';
 
   function isNb(n) {
@@ -82,344 +82,415 @@
     return { clear, add }
   }
 
-  function createPlugin(L) {
+  class Legend extends leaflet.Control {
 
-    const { Control, DomUtil, DomEvent, Marker, DivIcon, Circle, Polyline, Util } = L;
+    constructor(options) {
+      super({
+        ...{
+          position: 'bottomright',
+          html: `
+          <table>
+            <tbody>
+              <tr><td colspan="2" class="double">{heading} &deg;</td></tr>
+              <tr><td colspan="2" class="double">{speed} kts</td></tr>
+              <tr><th>lat</th><td>{lat}</td></tr>
+              <tr><th>lng</th><td>{lng}</td></tr>
+              <tr>
+                <td colspan="2">
+                  <div class="line one"></div><div class="line two"></div>
+                  <div class="hours"><div>0</div><div>1h</div><div>2h</div></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        `,
+          css: `
+          :scope {
+            padding: 5px 8px;
+            background: white;
+          }
+          th {
+            font-weight: normal;
+            color: rgb(0, 0, 0, .7);
+          }
+          td {
+            text-align: center;
+          }
+          td.double {
+            font-size: large;
+          }
+          td div.line {
+            width: 50%;
+            float: left;
+            height: 3px;
+            margin-top: 4px;
+          }
+          td div.line.one {
+            background: #ffcc00;
+          }
+          td div.line.two {
+            background: #3388ff;
+          }
+          td div.hours {
+            width: 100%;
+            float: left;
+            display: flex;
+            justify-content: space-between;
+          }
+        `,
+        },
+        ...options,
+      });
+    }
 
-    return Control.extend({
+    onAdd() {
+      const container = leaflet.DomUtil.create('div', 'leaflet-control leaflet-bar leaflet-control-boating-legend');
+      container.innerHTML = `
+      <style>
+        @scope (.leaflet-control-boating-legend) {
+          ${this.options.css}
+        }
+      </style>`;
+      this.body = leaflet.DomUtil.create('div', '', container);
+      return container
+    }
 
-      options: {
-        position: 'topleft',
-        boatColor: '#3388ff',
-        circleColor: '#3388ff',
-        lineColor1: '#ffcc00',
-        lineColor2: '#3388ff',
+    update(e) {
+      const nautic = 40000 / 360 / 60;
+      const heading = e.heading;
+      const speed = e.speed;
+
+      this.body.innerHTML = leaflet.Util.template(
+        this.options.html, {
+          ...latlngDMS(e),
+          heading: isNb(heading) ? Math.round(heading) : '--',
+          speed: isNb(speed) ? Math.round(speed * 36 / nautic) / 10 : '--',
+        }
+      );
+    }
+  }
+
+  class Boat extends leaflet.LayerGroup {
+
+    constructor(options) {
+      super([], {
+        ...{
+          color: '#3388ff',
+          circleColor: '#3388ff',
+          lineColor1: '#ffcc00',
+          lineColor2: '#3388ff',
+        },
+        ...options,
+      });
+
+      this._boat = new leaflet.Marker([0, 0], {
+        icon: new leaflet.DivIcon({
+          iconAnchor: [12.5, 12.5],
+          iconSize: [25, 25],
+          className: 'boat',
+          html: `
+          <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="boat-svg">
+            <path d="M 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512 Z" fill="${this.options.color}"/>
+          </svg>`,
+        })
+      });
+      this._boat.on('add', function() {
+        this._svg = this.getElement().querySelector('.boat-svg');
+      });
+
+      this._circle = new leaflet.Circle([0, 0], {
+        color: this.options.circleColor,
+        stroke: false,
+      });
+
+      this._line1 = new leaflet.Polyline([[0, 0], [0, 0]], {
+        color: this.options.lineColor1,
+      });
+
+      this._line2 = new leaflet.Polyline([[0, 0], [0, 0]], {
+        color: this.options.lineColor2,
+        lineCap: 'square',
+      });
+
+      this._circle.addTo(this);
+      this._line1.addTo(this);
+      this._line2.addTo(this);
+      this._boat.addTo(this);
+    }
+
+    onAdd(map) {
+      super.onAdd(map);
+      this._map.on('moveend', this._onMoveEnd, this);
+      this._e = null;
+    }
+
+    onRemove(map) {
+      super.onRemove(map);
+      this._map.off('moveend', this._onMoveEnd, this);
+    }
+
+    _onMoveEnd = () => {
+      if (this._e) {
+        this._updateLines(this._e);
+      }
+    }
+
+    _updateCircle(e) {
+      this._circle.setLatLng(e.latlng);
+      this._circle.setRadius(e.accuracy);
+    }
+
+    _updateBoat(e) {
+      const heading = e.heading || 0;
+      this._boat._svg.style.transform = 'rotate(' + heading + 'deg)';
+      this._boat.setLatLng(e.latlng);
+    }
+
+    _updateLines(e) {
+      const speed = e.speed || 0;
+      const heading = e.heading || 0;
+
+      const loc = this._map.project(e.latlng);
+      const bounds = this._map.getPixelBounds();
+
+      const len = Math.max(
+        loc.distanceTo([bounds.max.x, bounds.max.y]),
+        loc.distanceTo([bounds.max.x, bounds.min.y]),
+        loc.distanceTo([bounds.min.x, bounds.max.y]),
+        loc.distanceTo([bounds.min.x, bounds.min.y]),
+      );
+      const tip = this._map.unproject([
+        loc.x + sinDeg(heading) * len,
+        loc.y - cosDeg(heading) * len,
+      ]);
+
+      this._line1.setLatLngs([e.latlng, tip]);
+      this._line2.setLatLngs([e.latlng, tip]);
+
+      const lineMeters = e.latlng.distanceTo(tip);
+      const pixelsPerHour = 3600 * speed * len / lineMeters;
+
+      this._line2.setStyle({
+        dashArray: pixelsPerHour + ',' + pixelsPerHour,
+        dashOffset: pixelsPerHour,
+      });
+    }
+
+    update(e) {
+      this._e = e;
+      this._updateBoat(e);
+      this._updateLines(e);
+      this._updateCircle(e);
+    }
+  }
+
+  function Boating(map, options) {
+    if (map.boating) {
+      return map.boating
+    }
+
+    options = {
+      ...{
         motionCacheLength: 4,
         motionCacheMaxAge: 10000,
-        legendPosition: 'bottomright',
-        legendHTML: `
-        <table>
-          <tbody>
-            <tr><td colspan="2" class="double">{heading} &deg;</td></tr>
-            <tr><td colspan="2" class="double">{speed} kts</td></tr>
-            <tr><th>lat</th><td>{lat}</td></tr>
-            <tr><th>lng</th><td>{lng}</td></tr>
-            <tr>
-              <td colspan="2">
-                <div class="line one"></div><div class="line two"></div>
-                <div class="hours"><div>0</div><div>1h</div><div>2h</div></div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      `,
-        legendCSS: `
-        :scope {
-          padding: 5px 8px;
-          background: white;
-        }
-        th {
-          font-weight: normal;
-          color: rgb(0, 0, 0, .7);
-        }
-        td {
-          text-align: center;
-        }
-        td.double {
-          font-size: large;
-        }
-        td div.line {
-          width: 50%;
-          float: left;
-          height: 3px;
-          margin-top: 4px;
-        }
-        td div.line.one {
-          background: #ffcc00;
-        }
-        td div.line.two {
-          background: #3388ff;
-        }
-        td div.hours {
-          width: 100%;
-          float: left;
-          display: flex;
-          justify-content: space-between;
-        }
-      `,
         onLocationError(e) {
           console.error(e);
         },
       },
+      ...options,
+    };
 
-      initialize: function (options) {
-        Util.setOptions(this, options);
+    const boat = new Boat(options.boat);
+    const legend = new Legend(options.legend);
+    const motionSmoother = createMotionSmoother(
+      options.motionCacheLength,
+      options.motionCacheMaxAge,
+    );
 
-        this._legend = new Control({
-          position: this.options.legendPosition,
-          css: this.options.legendCSS,
-        });
-        this._legend.onAdd = function (map) {
-          const container = DomUtil.create('div', 'leaflet-control leaflet-bar leaflet-control-boating-legend');
-          container.innerHTML = `
-          <style>
-            @scope (.leaflet-control-boating-legend) {
-              ${this.options.css}
-            }
-          </style>`;
-          this.body = DomUtil.create('div', '', container);
-          return container
-        };
+    let state;
+    let lastPosition;
+    let savedZoomOptions;
 
-        this._boat = new Marker([0, 0], {
-          icon: new DivIcon({
-            iconAnchor: [12.5, 12.5],
-            iconSize: [25, 25],
-            className: 'boat',
-            html: `
-            <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="boat-svg">
-              <path d="M 128 512 C 128 512 128 128 256 0 C 384 128 384 512 384 512 Z" fill="${this.options.boatColor}"/>
-            </svg>`,
-          })
-        });
-        this._boat.on('add', function() {
-          this._svg = this.getElement().querySelector('.boat-svg');
-        });
+    function setState(newState) {
+      state = newState;
+      map.fire('boating:statechange', {state});
+    }
 
-        this._circle = new Circle([0, 0], {
-          color: this.options.circleColor,
-          stroke: false,
-        });
+    function start() {
+      map.on('dragstart', onDragStart);
+      map.on('locationfound', onLocationFound);
+      map.on('locationerror', onLocationError);
+      map.locate({ watch: true, enableHighAccuracy: true });
+      motionSmoother.clear();
+      lastPosition = null;
+      saveZoomInteractions();
+      setState('requesting');
+    }
 
-        this._line = new Polyline([[0, 0], [0, 0]], {
-          color: this.options.lineColor2,
-          lineCap: 'square',
-        });
+    function stop() {
+      map.stopLocate();
+      map.off('dragstart', onDragStart);
+      map.off('locationfound', onLocationFound);
+      map.off('locationerror', onLocationError);
+      map.removeControl(legend);
+      map.removeLayer(boat);
+      restoreZoomInteractions();
+      setState('idle');
+    }
 
-        this._linebg = new Polyline([[0, 0], [0, 0]], {
-          color: this.options.lineColor1,
-        });
+    function onDragStart() {
+      if (state === 'following') {
+        unfollow();
+      }
+    }
 
-        this._motionSmoother = createMotionSmoother(
-          this.options.motionCacheLength,
-          this.options.motionCacheMaxAge,
-        );
-      },
+    function follow() {
+      centerZoomInteractions();
+      setState('following');
+    }
 
-      onAdd: function (map) {
-        const container = DomUtil.create('div', 'leaflet-bar leaflet-control');
-        const link = DomUtil.create('a', 'leaflet-control-boating', container);
-        this._icon = DomUtil.create('span', 'icon', link);
-        link.setAttribute('aria-label', 'Boating Control');
-        link.setAttribute('role', 'button');
-        link.href = '#';
+    function unfollow() {
+      restoreZoomInteractions();
+      setState('locating');
+    }
 
-        DomEvent.disableClickPropagation(container);
-
-        DomEvent.on(link, 'click', function (e) {
-          DomEvent.stopPropagation(e);
-          DomEvent.preventDefault(e);
-          this._onClick();
-        }, this);
-
-        this._setState('idle');
-
-        return container
-      },
-
-      onRemove: function() {
-        this._stop();
-      },
-
-      _start: function () {
-        this._map.on('moveend', this._onMoveEnd, this);
-        this._map.on('dragstart', this._onDragStart, this);
-        this._map.on('locationfound', this._onLocationFound, this);
-        this._map.on('locationerror', this._onLocationError, this);
-        this._map.locate({ watch: true, enableHighAccuracy: true });
-        this._motionSmoother.clear();
-        this._lastPosition = null;
-        this._saveZoomOptions();
-        this._setState('requesting');
-      },
-
-      _stop: function () {
-        if (!this._map) return
-        this._map.stopLocate();
-        this._map.off('moveend', this._onMoveEnd, this);
-        this._map.off('dragstart', this._onDragStart, this);
-        this._map.off('locationfound', this._onLocationFound, this);
-        this._map.off('locationerror', this._onLocationError, this);
-        this._map.removeControl(this._legend);
-        this._map.removeLayer(this._circle);
-        this._map.removeLayer(this._linebg);
-        this._map.removeLayer(this._line);
-        this._map.removeLayer(this._boat);
-        this._restoreZoomOptions();
-        this._setState('idle');
-      },
-
-      _setState: function (state) {
-        this._state = state;
-        if (this._icon) {
-          this._icon.classList.remove('idle', 'requesting', 'following', 'locating');
-          this._icon.classList.add(state);
+    function onLocationFound(e) {
+      if (lastPosition) {
+        if (lastPosition.timestamp === e.timestamp) {
+          return
         }
+      }
+
+      const { heading, speed } = motionSmoother.add(e);
+      const eSmoothed =  { ...e, heading, speed };
+
+      if (state === 'requesting') {
+        map.addControl(legend);
+        map.addLayer(boat);
+        follow();
+      }
+      if (state === 'following') {
+        map.panTo(eSmoothed.latlng);
+      }
+      legend.update(eSmoothed);
+      boat.update(eSmoothed);
+      lastPosition = eSmoothed;
+    }
+
+    function onLocationError(e) {
+      if (e.code === 1) stop();
+      options.onLocationError(e);
+    }
+
+    function saveZoomInteractions() {
+      savedZoomOptions = {
+        touchZoom: map.options.touchZoom,
+        scrollWheelZoom: map.options.scrollWheelZoom,
+        doubleClickZoom: map.options.doubleClickZoom,
+      };
+    }
+
+    function centerZoomInteractions() {
+      map.options.touchZoom = 'center';
+      map.options.scrollWheelZoom = 'center';
+      map.options.doubleClickZoom = 'center';
+    }
+
+    function restoreZoomInteractions() {
+      if (savedZoomOptions) {
+        map.options.touchZoom = savedZoomOptions.touchZoom;
+        map.options.scrollWheelZoom = savedZoomOptions.scrollWheelZoom;
+        map.options.doubleClickZoom = savedZoomOptions.doubleClickZoom;
+      }
+    }
+
+    function trigger() {
+      if (state === 'idle') {
+        start();
+      }
+      else if (state === 'requesting') {
+        stop();
+      }
+      else if (state === 'following') {
+        stop();
+      }
+      else if (state === 'locating') {
+        map.panTo(lastPosition.latlng);
+        follow();
+      }
+    }
+
+    setState('idle');
+
+    map.boating = {
+      stop,
+      trigger,
+      get state() {
+        return state
       },
+    };
 
-      _onClick: function () {
-        if (this._state === 'idle') {
-          this._start();
-        }
-        else if (this._state === 'requesting') {
-          this._stop();
-        }
-        else if (this._state === 'following') {
-          this._stop();
-        }
-        else if (this._state === 'locating') {
-          this._map.panTo(this._lastPosition.latlng);
-          this._follow();
-        }
-      },
-
-      _onDragStart: function () {
-        if (this._state === 'following') {
-          this._unfollow();
-        }
-      },
-
-      _onMoveEnd: function () {
-        if ((this._state === 'locating' || this._state === 'following') && this._lastPosition) {
-          this._updateLine(this._lastPosition);
-        }
-      },
-
-      _follow: function () {
-        this._map.options.touchZoom = 'center';
-        this._map.options.scrollWheelZoom = 'center';
-        this._map.options.doubleClickZoom = 'center';
-        this._setState('following');
-      },
-
-      _unfollow: function () {
-        this._restoreZoomOptions();
-        this._setState('locating');
-      },
-
-      _onLocationFound: function (e) {
-        if (this._lastPosition) {
-          if (this._lastPosition.timestamp === e.timestamp) {
-            return
-          }
-        }
-
-        e.latlngDMS = latlngDMS(e);
-        e.smooth = this._motionSmoother.add(e);
-
-        if (this._state === 'requesting') {
-          this._map.addControl(this._legend);
-          this._map.addLayer(this._circle);
-          this._map.addLayer(this._linebg);
-          this._map.addLayer(this._line);
-          this._map.addLayer(this._boat);
-          this._follow();
-        }
-        if (this._state === 'following') {
-          this._map.panTo(e.latlng);
-        }
-        this._updateLegend(e);
-        this._updateCircle(e);
-        this._updateLine(e);
-        this._updateBoat(e);
-        this._lastPosition = e;
-      },
-
-      _onLocationError: function (e) {
-        if (e.code === 1) this._stop();
-        this.options.onLocationError(e);
-      },
-
-      _updateCircle: function (e) {
-        this._circle.setLatLng(e.latlng);
-        this._circle.setRadius(e.accuracy);
-      },
-
-      _updateBoat: function (e) {
-        const heading = e.smooth.heading || 0;
-        this._boat._svg.style.transform = 'rotate(' + heading + 'deg)';
-        this._boat.setLatLng(e.latlng);
-      },
-
-      _updateLine: function (e) {
-        const speed = e.smooth.speed;
-        const heading = e.smooth.heading;
-
-        const loc = this._map.project(e.latlng);
-        const bounds = this._map.getPixelBounds();
-
-        const len = Math.max(
-          loc.distanceTo([bounds.max.x, bounds.max.y]),
-          loc.distanceTo([bounds.max.x, bounds.min.y]),
-          loc.distanceTo([bounds.min.x, bounds.max.y]),
-          loc.distanceTo([bounds.min.x, bounds.min.y]),
-        );
-        const tip = this._map.unproject([
-          loc.x + sinDeg(heading) * len,
-          loc.y - cosDeg(heading) * len,
-        ]);
-
-        this._line.setLatLngs([e.latlng, tip]);
-        this._linebg.setLatLngs([e.latlng, tip]);
-
-        const lineMeters = e.latlng.distanceTo(tip);
-        const pixelsPerHour = 3600 * speed * len / lineMeters;
-
-        this._line.setStyle({
-          dashArray: pixelsPerHour + ',' + pixelsPerHour,
-          dashOffset: pixelsPerHour,
-        });
-      },
-
-      _updateLegend: function (e) {
-        const nautic = 40000 / 360 / 60;
-        const heading = e.smooth.heading;
-        const speed = e.smooth.speed;
-
-        this._legend.body.innerHTML = Util.template(
-          this.options.legendHTML, {
-            lat: e.latlngDMS.lat,
-            lng: e.latlngDMS.lng,
-            heading: isNb(heading) ? Math.round(heading) : '--',
-            speed: isNb(speed) ? Math.round(speed * 36 / nautic) / 10 : '--',
-          }
-        );
-      },
-
-      _saveZoomOptions: function () {
-        this._savedZoomOptions = {
-          touchZoom: this._map.options.touchZoom,
-          scrollWheelZoom: this._map.options.scrollWheelZoom,
-          doubleClickZoom: this._map.options.doubleClickZoom,
-        };
-      },
-
-      _restoreZoomOptions: function () {
-        if (this._savedZoomOptions) {
-          this._map.options.touchZoom = this._savedZoomOptions.touchZoom;
-          this._map.options.scrollWheelZoom = this._savedZoomOptions.scrollWheelZoom;
-          this._map.options.doubleClickZoom = this._savedZoomOptions.doubleClickZoom;
-        }
-      },
-    })
+    return map.boating
   }
 
-  const Boating = createPlugin(window.L);
+  class ControlBoating extends leaflet.Control {
 
-  window.L.Control.Boating = Boating;
+    constructor(options) {
+      super({
+        ...{
+          position: 'topleft',
+        },
+        ...options,
+      });
+    }
 
-  if (window.L.control) {
-    window.L.control.boating = (opt) => new Boating(opt);
+    onAdd(map) {
+      this.boating = Boating(map, this.options);
+      map.on('boating:statechange', this._onStateChange, this);
+
+      const container = leaflet.DomUtil.create('div', 'leaflet-bar leaflet-control');
+      const link = leaflet.DomUtil.create('a', 'leaflet-control-boating', container);
+      this._icon = leaflet.DomUtil.create('span', 'icon ' + this.boating.state, link);
+      link.setAttribute('aria-label', 'Boating Control');
+      link.setAttribute('role', 'button');
+      link.href = '#';
+
+      leaflet.DomEvent.disableClickPropagation(container);
+
+      leaflet.DomEvent.on(link, 'click', function (e) {
+        leaflet.DomEvent.stopPropagation(e);
+        leaflet.DomEvent.preventDefault(e);
+        this._onClick();
+      }, this);
+
+      return container
+    }
+
+    onRemove(map) {
+      map.off('boating:statechange', this._onStateChange, this);
+    }
+
+    _onClick() {
+      this.boating.trigger();
+    }
+
+    _onStateChange(e) {
+      if (this._icon) {
+        this._icon.classList.remove('idle', 'requesting', 'following', 'locating');
+        this._icon.classList.add(e.state);
+      }
+    }
   }
 
-})();
+  if (window.L) {
+    if (window.L.Control) {
+      window.L.Control.Boating = ControlBoating;
+    }
+    if (window.L.control) {
+      window.L.control.boating = function(opt) {
+        return new ControlBoating(opt)
+      };
+    }
+  }
+
+})(L);

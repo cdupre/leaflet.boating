@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Leaflet.Boating</title>
+  <title>Leaflet.Boating (leaflet 2.0)</title>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
@@ -29,11 +29,9 @@
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     })
 
-    const seaMarks = new L.TileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png')
-
     const map = new L.Map('map', {
       center: [47.2, -2.30],
-      layers: [baseMap, seaMarks],
+      layers: [baseMap],
       zoom: 10,
     })
 

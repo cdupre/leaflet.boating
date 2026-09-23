@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Leaflet.Boating (ESM)</title>
+  <title>Leaflet.Boating (leaflet 2.0 ESM)</title>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
@@ -31,21 +31,29 @@
   <script type="module">
 
     import { Map, TileLayer } from 'leaflet'
-    import Boating from '../dist/L.Control.Boating.esm.js'
+    import { ControlBoating, Boating } from '../dist/L.Control.Boating.esm.js'
 
     const baseMap = new TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     })
 
-    const seaMarks = new TileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png')
-
     const map = new Map('map', {
       center: [47.2, -2.30],
-      layers: [baseMap, seaMarks],
+      layers: [baseMap],
       zoom: 10,
     })
 
-    new Boating().addTo(map)
+    new ControlBoating().addTo(map)
+    new ControlBoating().addTo(map)
+
+    const ctrl = Boating(map)
+
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space') {
+        e.preventDefault()
+        ctrl.trigger()
+      }
+    })
 
   </script>
 </body>
