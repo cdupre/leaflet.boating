@@ -246,13 +246,7 @@ class Boat extends LayerGroup {
   }
 
   _updateLines(e) {
-    if (e.speed == null) {
-      this._line1.setLatLngs([]);
-      this._line2.setLatLngs([]);
-      return
-    }
-
-    const speed = e.speed;
+    const speed = e.speed || 0;
     const heading = e.heading || 0;
 
     const loc = this._map.project(e.latlng);
@@ -370,13 +364,13 @@ function Boating(map, options) {
     const { heading, speed } = motionSmoother.add(e);
     eSmoothed = { ...e, heading, speed };
 
+    if (state === 'following') {
+      map.panTo(eSmoothed.latlng);
+    }
     if (state === 'requesting') {
       map.addControl(legend);
       map.addLayer(boat);
       follow();
-    }
-    else if (state === 'following') {
-      map.panTo(eSmoothed.latlng);
     }
     legend.update(eSmoothed);
     boat.update(eSmoothed);

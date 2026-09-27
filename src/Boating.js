@@ -83,13 +83,13 @@ export function Boating(map, options) {
     const { heading, speed } = motionSmoother.add(e)
     eSmoothed = { ...e, heading, speed }
 
+    if (state === 'following') {
+      map.panTo(eSmoothed.latlng)
+    }
     if (state === 'requesting') {
       map.addControl(legend)
       map.addLayer(boat)
       follow()
-    }
-    else if (state === 'following') {
-      map.panTo(eSmoothed.latlng)
     }
     legend.update(eSmoothed)
     boat.update(eSmoothed)
