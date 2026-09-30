@@ -9,6 +9,12 @@
       height: 70vh;
       width: 70vw;
     }
+    .external-control {
+      margin: 8px;
+    }
+    .external-control > button {
+      cursor: pointer;
+    }
   </style>
 
   <!-- leaflet -->
@@ -26,8 +32,10 @@
 
 </head>
 <body>
-  <button id="button">Click</button>
-  <span id="state"></span>
+  <div class="external-control">
+    <button id="button"></button>
+    <div>state : <span id="state"></span></div>
+  </div>
   <div id="map"></div>
   <script type="module">
 
@@ -44,27 +52,46 @@
       zoom: 10,
     })
 
+    new ControlBoating().addTo(map)
+
     const boating = Boating(map)
 
     const $button = document.getElementById('button')
     const $state = document.getElementById('state')
 
-    map.on('boating:statechange', e => {
-      $state.textContent = e.state
+    function update(state) {
+      $state.textContent = state
+
+      if (state === 'requesting') {
+        $button.textContent = 'stop'
+      }
+      if (state === 'following') {
+        $button.textContent = 'stop'
+      }
+      if (state === 'locating') {
+        $button.textContent = 'follow'
+      }
+      if (state === 'idle') {
+        $button.textContent = 'request'
+      }
+    }
+
+    update(boating.state)
+
+    map.on('boating:statechange', function(e) {
+      update(e.state)
     })
 
-    $button.addEventListener('click', e => {
+    $button.addEventListener('click', function(e) {
       boating.trigger()
     })
 
-    document.addEventListener('keydown', e => {
+    document.addEventListener('keydown', function(e) {
       if (e.code === 'Space') {
         e.preventDefault()
         boating.trigger()
       }
     })
-
-    new ControlBoating().addTo(map)
 
   </script>
 </body>
