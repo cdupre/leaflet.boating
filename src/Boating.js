@@ -9,8 +9,7 @@ export function Boating(map, options) {
 
   options = {
     ...{
-      motionCacheLength: 4,
-      motionCacheMaxAge: 10000,
+      smoothingTimeConstant: 2000,
       onLocationError(e) {
         console.error(e)
       },
@@ -20,10 +19,7 @@ export function Boating(map, options) {
 
   const boat = new Boat(options.boat)
   const legend = new Legend(options.legend)
-  const motionSmoother = createMotionSmoother(
-    options.motionCacheLength,
-    options.motionCacheMaxAge,
-  )
+  const motionSmoother = createMotionSmoother(options.smoothingTimeConstant)
 
   let state
   let eSmoothed
@@ -39,7 +35,7 @@ export function Boating(map, options) {
     map.on('locationfound', onLocationFound)
     map.on('locationerror', onLocationError)
     map.locate({ watch: true, enableHighAccuracy: true })
-    motionSmoother.clear()
+    motionSmoother.reset()
     eSmoothed = null
     saveZoomInteractions()
     setState('requesting')

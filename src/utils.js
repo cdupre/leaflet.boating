@@ -44,37 +44,41 @@ export function latlngDMS(e) {
   }
 }
 
-export function createMotionSmoother(cacheLength, cacheMaxAge) {
-  const cache = []
+export function createMotionSmoother(tau) {
+  let timestamp = null
+  let vx = null
+  let vy = null
 
-  function clear() {
-    cache.length = 0
+  function reset() {
+    timestamp = vx = vy = null
   }
 
   function add(e) {
-    if (isNb(e.speed) && isNb(e.heading)) {
-      cache.push(e)
+    if (!isNb(e.speed) || !isNb(e.heading)) {
+      return { heading: null, speed: null }
     }
-    while (cache[0] && ((e.timestamp - cache[0].timestamp) > cacheMaxAge)) {
-      cache.shift()
+
+    const newVx = e.speed * sinDeg(e.heading)
+    const newVy = e.speed * cosDeg(e.heading)
+
+    if (!isNb(timestamp) || !(tau > 0)) {
+      vx = newVx
+      vy = newVy
     }
-    if (cache.length > cacheLength) {
-      cache.shift()
+    else {
+      const dt = Math.max(e.timestamp - timestamp, 0)
+      const alpha = 1 - Math.exp(-dt / tau)
+      vx = alpha * newVx + (1 - alpha) * vx
+      vy = alpha * newVy + (1 - alpha) * vy
     }
-    if (cache.length === 0) {
-      return { speed: null, heading: null }
-    }
-    const sumX = cache.reduce(
-      (sum, e) => sum + e.speed * cosDeg(e.heading), 0
-    )
-    const sumY = cache.reduce(
-      (sum, e) => sum + e.speed * sinDeg(e.heading), 0
-    )
+
+    timestamp = e.timestamp
+
     return {
-      heading: atan2Deg(sumY, sumX),
-      speed: Math.sqrt(sumX ** 2 + sumY ** 2) / cache.length,
+      heading: atan2Deg(vx, vy),
+      speed: Math.hypot(vx, vy),
     }
   }
 
-  return { clear, add }
+  return { reset, add }
 }

@@ -51,8 +51,7 @@ Possible options are listed in the following table
 | Option | Type | Description | Default |
 | --- | --- | --- | --- |
 | `position` | `string`  | position of the control | `topleft` |
-| `motionCacheLength` | `number`  | maximum number of averaged GPS points for smoothest movements | `4` |
-| `motionCacheMaxAge` | `number`  | max age in milliseconds for the averaged GPS points for smoothest movements, applied at the time of calculation, not afterwards. | `10000` |
+| `smoothingTimeConstant` | `number`  | [`time constant`](https://en.wikipedia.org/wiki/Exponential_smoothing#Time_constant) in milliseconds of the exponential smoothing applied to speed and heading. Higher is smoother but laggier. `0` disables smoothing | `2000` |
 | `onLocationError` | `function`  | called on location errors, receives the [`ErrorEvent`](https://leafletjs.com/reference.html#errorevent) | *(see source in [Boating.js](src/Boating.js))* |
 | `boat.color` | `string`  | boat color | `#3388ff` |
 | `boat.circleColor` | `string`  | circle color | `#3388ff` |

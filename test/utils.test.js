@@ -136,87 +136,95 @@ test('latlngDMS', async (t) => {
 })
 
 test('createMotionSmoother', async (t) => {
-  await t.test('returns null speed/heading while cache is empty', () => {
-    const s = createMotionSmoother(4, 10000)
-    assert.deepEqual(s.add({ speed: NaN, heading: NaN, timestamp: 0 }), {
-      speed: null,
-      heading: null,
-    })
-  })
-
-  await t.test('ignores samples with non-numeric speed or heading', () => {
-    const s = createMotionSmoother(4, 10000)
-    assert.deepEqual(s.add({ speed: 10, heading: undefined, timestamp: 0 }), {
-      speed: null,
-      heading: null,
-    })
-    assert.deepEqual(s.add({ speed: 'x', heading: 90, timestamp: 1 }), {
-      speed: null,
-      heading: null,
-    })
-  })
-
-  await t.test('single sample returns that sample', () => {
-    const s = createMotionSmoother(4, 10000)
+  await t.test('first sample is returned as is', () => {
+    const s = createMotionSmoother(3000)
     const out = s.add({ speed: 10, heading: 90, timestamp: 0 })
     near(out.speed, 10, 1e-9)
     near(out.heading, 90, 1e-9)
   })
 
-  await t.test('averages the vector of same-heading samples', () => {
-    const s = createMotionSmoother(4, 10000)
+  await t.test('returns null speed/heading for an invalid sample', () => {
+    const s = createMotionSmoother(3000)
+    const none = { speed: null, heading: null }
+    assert.deepEqual(s.add({ speed: NaN, heading: NaN, timestamp: 0 }), none)
+    assert.deepEqual(s.add({ speed: 10, heading: undefined, timestamp: 1 }), none)
+    assert.deepEqual(s.add({ speed: 'x', heading: 90, timestamp: 2 }), none)
+  })
+
+  await t.test('moves toward the new sample by 1 - exp(-dt/tau)', () => {
+    const s = createMotionSmoother(1000)
     s.add({ speed: 10, heading: 0, timestamp: 0 })
     const out = s.add({ speed: 20, heading: 0, timestamp: 1000 })
     near(out.heading, 0, 1e-9)
-    near(out.speed, 15, 1e-9)
+    near(out.speed, 10 + 10 * (1 - Math.exp(-1)), 1e-9)
+  })
+
+  await t.test('a longer gap weighs the new sample more', () => {
+    const a = createMotionSmoother(1000)
+    const b = createMotionSmoother(1000)
+    a.add({ speed: 10, heading: 0, timestamp: 0 })
+    b.add({ speed: 10, heading: 0, timestamp: 0 })
+    const short = a.add({ speed: 20, heading: 0, timestamp: 500 })
+    const long = b.add({ speed: 20, heading: 0, timestamp: 5000 })
+    assert.ok(long.speed > short.speed)
+  })
+
+  await t.test('identical timestamps do not change the state', () => {
+    const s = createMotionSmoother(1000)
+    s.add({ speed: 10, heading: 0, timestamp: 0 })
+    near(s.add({ speed: 99, heading: 0, timestamp: 0 }).speed, 10, 1e-9)
   })
 
   await t.test('opposite vectors cancel to zero speed', () => {
-    const s = createMotionSmoother(4, 10000)
+    // tau = 1000 / ln 2 gives alpha = 0.5 after 1s, i.e. equal weights
+    const s = createMotionSmoother(1000 / Math.LN2)
     s.add({ speed: 10, heading: 0, timestamp: 0 })
-    const out = s.add({ speed: 10, heading: 180, timestamp: 1000 })
-    near(out.speed, 0, 1e-9)
+    near(s.add({ speed: 10, heading: 180, timestamp: 1000 }).speed, 0, 1e-9)
   })
 
-  await t.test('drops the oldest sample past cacheLength', () => {
-    const s = createMotionSmoother(2, 100000)
-    s.add({ speed: 100, heading: 0, timestamp: 0 })
-    s.add({ speed: 10, heading: 0, timestamp: 1000 })
-    // third sample pushes the first (speed 100) out
-    const out = s.add({ speed: 20, heading: 0, timestamp: 2000 })
-    near(out.speed, 15, 1e-9) // mean of 10 and 20
-  })
-
-  await t.test('drops samples older than cacheMaxAge seconds', () => {
-    const s = createMotionSmoother(10, 10000)
-    s.add({ speed: 100, heading: 0, timestamp: 0 })
-    // 20s later: the first sample is older than 10s and is evicted
-    const out = s.add({ speed: 30, heading: 0, timestamp: 20000 })
-    near(out.speed, 30, 1e-9)
-  })
-
-  await t.test('keeps samples within cacheMaxAge', () => {
-    const s = createMotionSmoother(10, 10000)
+  await t.test('an invalid sample keeps the state, dt counts from the last valid one', () => {
+    // tau = 1000 / ln 2 gives alpha = 0.5 after 1s, i.e. equal weights
+    const s = createMotionSmoother(1000 / Math.LN2)
     s.add({ speed: 10, heading: 0, timestamp: 0 })
-    const out = s.add({ speed: 20, heading: 0, timestamp: 10000 })
-    near(out.speed, 15, 1e-9)
+    s.add({ speed: NaN, heading: NaN, timestamp: 500 })
+    // 1s since the last valid sample, not 0.5s since the invalid one
+    near(s.add({ speed: 10, heading: 180, timestamp: 1000 }).speed, 0, 1e-9)
   })
 
-  await t.test('clear() empties the cache', () => {
-    const s = createMotionSmoother(4, 10000)
+  await t.test('forgets the past after a long gap', () => {
+    const s = createMotionSmoother(3000)
+    s.add({ speed: 100, heading: 0, timestamp: 0 })
+    const out = s.add({ speed: 30, heading: 90, timestamp: 60000 })
+    near(out.speed, 30, 1e-3)
+    near(out.heading, 90, 1e-3)
+  })
+
+  await t.test('tau = 0 disables smoothing', () => {
+    const s = createMotionSmoother(0)
+    s.add({ speed: 10, heading: 0, timestamp: 0 })
+    // same timestamp (dt = 0) must not produce NaN
+    const same = s.add({ speed: 20, heading: 90, timestamp: 0 })
+    near(same.speed, 20, 1e-9)
+    near(same.heading, 90, 1e-9)
+    const later = s.add({ speed: 30, heading: 180, timestamp: 1000 })
+    near(later.speed, 30, 1e-9)
+    near(later.heading, 180, 1e-9)
+  })
+
+  await t.test('reset() forgets the previous state', () => {
+    const s = createMotionSmoother(3000)
     s.add({ speed: 10, heading: 90, timestamp: 0 })
-    s.clear()
-    assert.deepEqual(s.add({ speed: NaN, heading: NaN, timestamp: 1 }), {
-      speed: null,
-      heading: null,
-    })
+    s.reset()
+    const out = s.add({ speed: 20, heading: 0, timestamp: 1 })
+    near(out.speed, 20, 1e-9)
+    near(out.heading, 0, 1e-9)
   })
 
   await t.test('averages heading around the compass correctly', () => {
-    const s = createMotionSmoother(4, 10000)
+    const s = createMotionSmoother(1000 / Math.LN2)
     s.add({ speed: 10, heading: 350, timestamp: 0 })
     const out = s.add({ speed: 10, heading: 10, timestamp: 1000 })
     // mean bearing of 350 and 10 is 0/360, not 180
-    near(out.heading, 0, 1e-6)
+    near(Math.min(out.heading, 360 - out.heading), 0, 1e-6)
   })
 })

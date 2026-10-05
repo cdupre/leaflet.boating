@@ -47,39 +47,43 @@
     }
   }
 
-  function createMotionSmoother(cacheLength, cacheMaxAge) {
-    const cache = [];
+  function createMotionSmoother(tau) {
+    let timestamp = null;
+    let vx = null;
+    let vy = null;
 
-    function clear() {
-      cache.length = 0;
+    function reset() {
+      timestamp = vx = vy = null;
     }
 
     function add(e) {
-      if (isNb(e.speed) && isNb(e.heading)) {
-        cache.push(e);
+      if (!isNb(e.speed) || !isNb(e.heading)) {
+        return { heading: null, speed: null }
       }
-      while (cache[0] && ((e.timestamp - cache[0].timestamp) > cacheMaxAge)) {
-        cache.shift();
+
+      const newVx = e.speed * cosDeg(e.heading);
+      const newVy = e.speed * sinDeg(e.heading);
+
+      if (!isNb(timestamp) || !(tau > 0)) {
+        vx = newVx;
+        vy = newVy;
       }
-      if (cache.length > cacheLength) {
-        cache.shift();
+      else {
+        const dt = Math.max(e.timestamp - timestamp, 0);
+        const alpha = 1 - Math.exp(-dt / tau);
+        vx = alpha * newVx + (1 - alpha) * vx;
+        vy = alpha * newVy + (1 - alpha) * vy;
       }
-      if (cache.length === 0) {
-        return { speed: null, heading: null }
-      }
-      const sumX = cache.reduce(
-        (sum, e) => sum + e.speed * cosDeg(e.heading), 0
-      );
-      const sumY = cache.reduce(
-        (sum, e) => sum + e.speed * sinDeg(e.heading), 0
-      );
+
+      timestamp = e.timestamp;
+
       return {
-        heading: atan2Deg(sumY, sumX),
-        speed: Math.sqrt(sumX ** 2 + sumY ** 2) / cache.length,
+        heading: atan2Deg(vy, vx),
+        speed: Math.hypot(vx, vy),
       }
     }
 
-    return { clear, add }
+    return { reset, add }
   }
 
   class Legend extends leaflet.Control {
@@ -291,8 +295,7 @@
 
     options = {
       ...{
-        motionCacheLength: 4,
-        motionCacheMaxAge: 10000,
+        smoothingTimeConstant: 2000,
         onLocationError(e) {
           console.error(e);
         },
@@ -302,10 +305,7 @@
 
     const boat = new Boat(options.boat);
     const legend = new Legend(options.legend);
-    const motionSmoother = createMotionSmoother(
-      options.motionCacheLength,
-      options.motionCacheMaxAge,
-    );
+    const motionSmoother = createMotionSmoother(options.smoothingTimeConstant);
 
     let state;
     let eSmoothed;
@@ -321,7 +321,7 @@
       map.on('locationfound', onLocationFound);
       map.on('locationerror', onLocationError);
       map.locate({ watch: true, enableHighAccuracy: true });
-      motionSmoother.clear();
+      motionSmoother.reset();
       eSmoothed = null;
       saveZoomInteractions();
       setState('requesting');
