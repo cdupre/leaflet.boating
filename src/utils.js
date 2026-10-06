@@ -65,15 +65,15 @@ export function createMotionSmoother(tau) {
     if (!isNb(timestamp) || !(tau > 0)) {
       vx = newVx
       vy = newVy
+      timestamp = e.timestamp
     }
-    else {
-      const dt = Math.max(e.timestamp - timestamp, 0)
+    else if (e.timestamp > timestamp) {
+      const dt = e.timestamp - timestamp
       const alpha = 1 - Math.exp(-dt / tau)
       vx = alpha * newVx + (1 - alpha) * vx
       vy = alpha * newVy + (1 - alpha) * vy
+      timestamp = e.timestamp
     }
-
-    timestamp = e.timestamp
 
     return {
       heading: atan2Deg(vx, vy),
