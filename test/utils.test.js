@@ -97,7 +97,7 @@ test('atan2Deg', async (t) => {
 })
 
 test('latlngDMS', async (t) => {
-  const dms = (lat, lng) => latlngDMS({ latlng: { lat, lng } })
+  const dms = (lat, lng) => latlngDMS({ lat, lng })
 
   await t.test('zero coordinates', () => {
     assert.deepEqual(dms(0, 0), {

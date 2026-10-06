@@ -75,13 +75,16 @@ export class Legend extends Control {
   }
 
   update(e) {
-    const nautic = 40000 / 360 / 60
-    const heading = e.heading
+    const nautic = 1.852
     const speed = e.speed
+    const latlng = e.latlng
+    const heading = e.heading
+    const { lat, lng } = latlngDMS(latlng)
 
     this.body.innerHTML = Util.template(
       this.options.html, {
-        ...latlngDMS(e),
+        lat,
+        lng,
         heading: isNb(heading) ? Math.round(heading) : '--',
         speed: isNb(speed) ? Math.round(speed * 36 / nautic) / 10 : '--',
       }

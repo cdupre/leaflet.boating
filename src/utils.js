@@ -14,7 +14,7 @@ export function atan2Deg(y, x) {
   return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360
 }
 
-export function latlngDMS(e) {
+export function latlngDMS(latlng) {
   function dms(coord) {
     let float = Math.abs(coord)
     let d = Math.floor(float)
@@ -39,8 +39,8 @@ export function latlngDMS(e) {
     return d + '° ' + m + '\' ' + s + '" '
   }
   return {
-    lat: dms(e.latlng.lat) + ((e.latlng.lat < 0) ? 'S' : 'N'),
-    lng: dms(e.latlng.lng) + ((e.latlng.lng < 0) ? 'W' : 'E'),
+    lat: dms(latlng.lat) + ((latlng.lat < 0) ? 'S' : 'N'),
+    lng: dms(latlng.lng) + ((latlng.lng < 0) ? 'W' : 'E'),
   }
 }
 
