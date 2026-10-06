@@ -45,12 +45,12 @@ export function latlngDMS(latlng) {
 }
 
 export function createMotionSmoother(tau) {
-  let timestamp = null
+  let ts = null
   let vx = null
   let vy = null
 
   function reset() {
-    timestamp = vx = vy = null
+    ts = vx = vy = null
   }
 
   function add(e) {
@@ -62,17 +62,17 @@ export function createMotionSmoother(tau) {
       newVy = e.speed * cosDeg(e.heading)
     }
 
-    if (!isNb(timestamp) || !(tau > 0)) {
+    if (!isNb(ts) || !(tau > 0)) {
       vx = newVx
       vy = newVy
-      timestamp = e.timestamp
+      ts = e.timestamp
     }
-    else if (e.timestamp > timestamp) {
-      const dt = e.timestamp - timestamp
+    else if (e.timestamp > ts) {
+      const dt = e.timestamp - ts
       const alpha = 1 - Math.exp(-dt / tau)
       vx = alpha * newVx + (1 - alpha) * vx
       vy = alpha * newVy + (1 - alpha) * vy
-      timestamp = e.timestamp
+      ts = e.timestamp
     }
 
     return {

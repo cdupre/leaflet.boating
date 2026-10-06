@@ -89,6 +89,10 @@ test('atan2Deg', async (t) => {
     near(atan2Deg(1, 1), 45)
   })
 
+  await t.test('origin gives 0 (no direction)', () => {
+    assert.equal(atan2Deg(0, 0), 0)
+  })
+
   await t.test('inverse of (cosDeg, sinDeg)', () => {
     for (const d of [0, 12, 90, 175, 200, 359]) {
       near(atan2Deg(sinDeg(d), cosDeg(d)), d, 1e-7)
@@ -123,6 +127,16 @@ test('latlngDMS', async (t) => {
     assert.equal(dms(coord, 0).lat, '1° 02\' 03" N')
   })
 
+  await t.test('formats longitude like latitude', () => {
+    assert.equal(dms(0, -1.5).lng, '1° 30\' 00" W')
+    assert.equal(dms(0, 1 + 2 / 60 + 3 / 3600).lng, '1° 02\' 03" E')
+  })
+
+  await t.test('carries 60 seconds into minutes without touching degrees', () => {
+    // 1° 29' 59.9" -> 1° 30' 00"
+    assert.equal(dms(1 + 29 / 60 + 59.9 / 3600, 0).lat, '1° 30\' 00" N')
+  })
+
   await t.test('carries 60 seconds into minutes', () => {
     // 0.99986 deg -> 0° 59' 59.5" -> rounds to 60" -> 1° 00' 00"
     assert.equal(dms(0.9999, 0).lat, '1° 00\' 00" N')
@@ -143,12 +157,20 @@ test('createMotionSmoother', async (t) => {
     near(out.heading, 90, 1e-9)
   })
 
-  await t.test('returns null speed/heading for an invalid sample', () => {
+  await t.test('without a previous state, an invalid sample gives zero speed', () => {
     const s = createMotionSmoother(3000)
-    const none = { speed: null, heading: null }
-    assert.deepEqual(s.add({ speed: NaN, heading: NaN, timestamp: 0 }), none)
-    assert.deepEqual(s.add({ speed: 10, heading: undefined, timestamp: 1 }), none)
-    assert.deepEqual(s.add({ speed: 'x', heading: 90, timestamp: 2 }), none)
+    const stopped = { heading: 0, speed: 0 }
+    assert.deepEqual(s.add({ speed: NaN, heading: NaN, timestamp: 0 }), stopped)
+    assert.deepEqual(s.add({ speed: 10, heading: undefined, timestamp: 1 }), stopped)
+    assert.deepEqual(s.add({ speed: 'x', heading: 90, timestamp: 2 }), stopped)
+  })
+
+  await t.test('an invalid sample after a valid one decays but is not zero', () => {
+    const s = createMotionSmoother(1000)
+    s.add({ speed: 10, heading: 90, timestamp: 0 })
+    const out = s.add({ speed: NaN, heading: NaN, timestamp: 1000 })
+    near(out.speed, 10 * Math.exp(-1), 1e-9)
+    near(out.heading, 90, 1e-9)
   })
 
   await t.test('moves toward the new sample by 1 - exp(-dt/tau)', () => {
@@ -175,6 +197,22 @@ test('createMotionSmoother', async (t) => {
     near(s.add({ speed: 99, heading: 0, timestamp: 0 }).speed, 10, 1e-9)
   })
 
+  await t.test('an older timestamp is ignored', () => {
+    const s = createMotionSmoother(1000)
+    const ref = s.add({ speed: 10, heading: 0, timestamp: 1000 })
+    const out = s.add({ speed: 99, heading: 90, timestamp: 500 })
+    near(out.speed, ref.speed, 1e-9)
+    near(out.heading, ref.heading, 1e-9)
+    // and the next sample is still smoothed from the last accepted timestamp (dt = 1s)
+    near(s.add({ speed: 20, heading: 0, timestamp: 2000 }).speed, 10 + 10 * (1 - Math.exp(-1)), 1e-9)
+  })
+
+  await t.test('a valid zero speed is a real sample', () => {
+    const s = createMotionSmoother(1000)
+    s.add({ speed: 10, heading: 0, timestamp: 0 })
+    near(s.add({ speed: 0, heading: 0, timestamp: 1000 }).speed, 10 * Math.exp(-1), 1e-9)
+  })
+
   await t.test('opposite vectors cancel to zero speed', () => {
     // tau = 1000 / ln 2 gives alpha = 0.5 after 1s, i.e. equal weights
     const s = createMotionSmoother(1000 / Math.LN2)
@@ -182,13 +220,18 @@ test('createMotionSmoother', async (t) => {
     near(s.add({ speed: 10, heading: 180, timestamp: 1000 }).speed, 0, 1e-9)
   })
 
-  await t.test('an invalid sample keeps the state, dt counts from the last valid one', () => {
-    // tau = 1000 / ln 2 gives alpha = 0.5 after 1s, i.e. equal weights
+  await t.test('an invalid sample pulls the state toward zero and advances the timestamp', () => {
+    // tau = 1000 / ln 2 gives alpha = 1 - 2^(-dt/1s)
     const s = createMotionSmoother(1000 / Math.LN2)
     s.add({ speed: 10, heading: 0, timestamp: 0 })
-    s.add({ speed: NaN, heading: NaN, timestamp: 500 })
-    // 1s since the last valid sample, not 0.5s since the invalid one
-    near(s.add({ speed: 10, heading: 180, timestamp: 1000 }).speed, 0, 1e-9)
+    // dt = 0.5s: alpha = 1 - 1/sqrt(2), toward zero -> 10 / sqrt(2)
+    const mid = s.add({ speed: NaN, heading: NaN, timestamp: 500 })
+    near(mid.speed, 10 / Math.SQRT2, 1e-9)
+    // dt counts from the invalid sample (0.5s), not from the last valid one
+    const alpha = 1 - 1 / Math.SQRT2
+    const out = s.add({ speed: 10, heading: 180, timestamp: 1000 })
+    near(out.speed, (1 - alpha) * (10 / Math.SQRT2) - alpha * 10, 1e-9)
+    near(out.heading, 0, 1e-9)
   })
 
   await t.test('forgets the past after a long gap', () => {
