@@ -85,8 +85,8 @@ export class Legend extends Control {
       this.options.html, {
         lat,
         lng,
-        heading: isNb(heading) ? Math.round(heading) : '--',
-        speed: isNb(speed) ? Math.round(speed * 36 / nautic) / 10 : '--',
+        heading: heading ? Math.round(heading) : '--',
+        speed: Math.round(speed * 36 / nautic) / 10,
       }
     )
   }

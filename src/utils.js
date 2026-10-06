@@ -54,12 +54,13 @@ export function createMotionSmoother(tau) {
   }
 
   function add(e) {
-    if (!isNb(e.speed) || !isNb(e.heading)) {
-      return { heading: null, speed: null }
-    }
+    let newVx = 0
+    let newVy = 0
 
-    const newVx = e.speed * sinDeg(e.heading)
-    const newVy = e.speed * cosDeg(e.heading)
+    if (isNb(e.speed) && isNb(e.heading)) {
+      newVx = e.speed * sinDeg(e.heading)
+      newVy = e.speed * cosDeg(e.heading)
+    }
 
     if (!isNb(timestamp) || !(tau > 0)) {
       vx = newVx
