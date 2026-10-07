@@ -79,7 +79,7 @@ export function Boating(map, options) {
     eSmoothed = motionSmoother.add(e)
 
     if (state === 'following') {
-      map.panTo(eSmoothed.latlng)
+      map.panTo(eSmoothed.latlng, { animate: false })
     }
     if (state === 'requesting') {
       map.addControl(legend)
