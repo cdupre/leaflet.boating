@@ -312,9 +312,9 @@
     const legend = new Legend(options.legend);
     const motionSmoother = createMotionSmoother(options.smoothingTimeConstant);
 
-    let state;
     let eSmoothed;
     let savedZoomOptions;
+    let state = 'idle';
 
     function setState(newState) {
       state = newState;
@@ -422,8 +422,6 @@
         follow();
       }
     }
-
-    setState('idle');
 
     map.boating = {
       stop,
