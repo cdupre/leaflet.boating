@@ -16,7 +16,7 @@ function atan2Deg(y, x) {
   return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360
 }
 
-function latlngDMS(e) {
+function latlngDMS(latlng) {
   function dms(coord) {
     let float = Math.abs(coord);
     let d = Math.floor(float);
@@ -41,43 +41,45 @@ function latlngDMS(e) {
     return d + '° ' + m + '\' ' + s + '" '
   }
   return {
-    lat: dms(e.latlng.lat) + ((e.latlng.lat < 0) ? 'S' : 'N'),
-    lng: dms(e.latlng.lng) + ((e.latlng.lng < 0) ? 'W' : 'E'),
+    lat: dms(latlng.lat) + ((latlng.lat < 0) ? 'S' : 'N'),
+    lng: dms(latlng.lng) + ((latlng.lng < 0) ? 'W' : 'E'),
   }
 }
 
 function createMotionSmoother(tau) {
-  let timestamp = null;
+  let ts = null;
   let vx = null;
   let vy = null;
 
   function reset() {
-    timestamp = vx = vy = null;
+    ts = vx = vy = null;
   }
 
   function add(e) {
-    if (!isNb(e.speed) || !isNb(e.heading)) {
-      return { heading: null, speed: null }
+    let newVx = 0;
+    let newVy = 0;
+
+    if (isNb(e.speed) && isNb(e.heading)) {
+      newVx = e.speed * sinDeg(e.heading);
+      newVy = e.speed * cosDeg(e.heading);
     }
 
-    const newVx = e.speed * cosDeg(e.heading);
-    const newVy = e.speed * sinDeg(e.heading);
-
-    if (!isNb(timestamp) || !(tau > 0)) {
+    if (!isNb(ts) || !(tau > 0)) {
       vx = newVx;
       vy = newVy;
+      ts = e.timestamp;
     }
-    else {
-      const dt = Math.max(e.timestamp - timestamp, 0);
+    else if (e.timestamp > ts) {
+      const dt = e.timestamp - ts;
       const alpha = 1 - Math.exp(-dt / tau);
       vx = alpha * newVx + (1 - alpha) * vx;
       vy = alpha * newVy + (1 - alpha) * vy;
+      ts = e.timestamp;
     }
 
-    timestamp = e.timestamp;
-
     return {
-      heading: atan2Deg(vy, vx),
+      ...e,
+      heading: atan2Deg(vx, vy),
       speed: Math.hypot(vx, vy),
     }
   }
@@ -159,15 +161,18 @@ class Legend extends Control {
   }
 
   update(e) {
-    const nautic = 40000 / 360 / 60;
-    const heading = e.heading;
+    const nautic = 1.852;
     const speed = e.speed;
+    const latlng = e.latlng;
+    const heading = e.heading;
+    const { lat, lng } = latlngDMS(latlng);
 
     this.body.innerHTML = Util.template(
       this.options.html, {
-        ...latlngDMS(e),
-        heading: isNb(heading) ? Math.round(heading) : '--',
-        speed: isNb(speed) ? Math.round(speed * 36 / nautic) / 10 : '--',
+        lat,
+        lng,
+        heading: heading ? Math.round(heading) : '--',
+        speed: Math.round(speed * 36 / nautic) / 10,
       }
     );
   }
@@ -361,8 +366,7 @@ function Boating(map, options) {
       }
     }
 
-    const { heading, speed } = motionSmoother.add(e);
-    eSmoothed = { ...e, heading, speed };
+    eSmoothed = motionSmoother.add(e);
 
     if (state === 'following') {
       map.panTo(eSmoothed.latlng);

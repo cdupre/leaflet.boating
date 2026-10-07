@@ -160,9 +160,17 @@ test('createMotionSmoother', async (t) => {
   await t.test('without a previous state, an invalid sample gives zero speed', () => {
     const s = createMotionSmoother(3000)
     const stopped = { heading: 0, speed: 0 }
-    assert.deepEqual(s.add({ speed: NaN, heading: NaN, timestamp: 0 }), stopped)
-    assert.deepEqual(s.add({ speed: 10, heading: undefined, timestamp: 1 }), stopped)
-    assert.deepEqual(s.add({ speed: 'x', heading: 90, timestamp: 2 }), stopped)
+    assert.deepEqual(s.add({ speed: NaN, heading: NaN, timestamp: 0 }), { ...stopped, timestamp: 0 })
+    assert.deepEqual(s.add({ speed: 10, heading: undefined, timestamp: 1 }), { ...stopped, timestamp: 1 })
+    assert.deepEqual(s.add({ speed: 'x', heading: 90, timestamp: 2 }), { ...stopped, timestamp: 2 })
+  })
+
+  await t.test('the other fields of the sample are passed through', () => {
+    const s = createMotionSmoother(3000)
+    const latlng = { lat: 1, lng: 2 }
+    const out = s.add({ speed: 10, heading: 90, timestamp: 0, latlng })
+    assert.equal(out.latlng, latlng)
+    assert.equal(out.timestamp, 0)
   })
 
   await t.test('an invalid sample after a valid one decays but is not zero', () => {

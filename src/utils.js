@@ -76,6 +76,7 @@ export function createMotionSmoother(tau) {
     }
 
     return {
+      ...e,
       heading: atan2Deg(vx, vy),
       speed: Math.hypot(vx, vy),
     }
