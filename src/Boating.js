@@ -2,18 +2,20 @@ import { createMotionSmoother } from './utils.js'
 import { Legend } from './Legend.js'
 import { Boat } from './Boat.js'
 
+const defaultOptions = {
+  smoothingTimeConstant: 2000,
+  onLocationError(e) {
+    console.error(e)
+  },
+}
+
 export function Boating(map, options) {
   if (map.boating) {
     return map.boating
   }
 
   options = {
-    ...{
-      smoothingTimeConstant: 2000,
-      onLocationError(e) {
-        console.error(e)
-      },
-    },
+    ...defaultOptions,
     ...options,
   }
 

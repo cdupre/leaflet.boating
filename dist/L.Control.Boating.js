@@ -88,63 +88,65 @@
     return { reset, add }
   }
 
+  const defaultOptions$3 = {
+    position: 'bottomright',
+    html: `
+    <table>
+      <tbody>
+        <tr><td colspan="2" class="double">{heading} &deg;</td></tr>
+        <tr><td colspan="2" class="double">{speed} kts</td></tr>
+        <tr><th>lat</th><td>{lat}</td></tr>
+        <tr><th>lng</th><td>{lng}</td></tr>
+        <tr>
+          <td colspan="2">
+            <div class="line one"></div><div class="line two"></div>
+            <div class="hours"><div>0</div><div>1h</div><div>2h</div></div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  `,
+    css: `
+    :scope {
+      padding: 5px 8px;
+      background: white;
+    }
+    th {
+      font-weight: normal;
+      color: rgb(0, 0, 0, .7);
+    }
+    td {
+      text-align: center;
+    }
+    td.double {
+      font-size: large;
+    }
+    td div.line {
+      width: 50%;
+      float: left;
+      height: 3px;
+      margin-top: 4px;
+    }
+    td div.line.one {
+      background: #ffcc00;
+    }
+    td div.line.two {
+      background: #3388ff;
+    }
+    td div.hours {
+      width: 100%;
+      float: left;
+      display: flex;
+      justify-content: space-between;
+    }
+  `,
+  };
+
   class Legend extends leaflet.Control {
 
     constructor(options) {
       super({
-        ...{
-          position: 'bottomright',
-          html: `
-          <table>
-            <tbody>
-              <tr><td colspan="2" class="double">{heading} &deg;</td></tr>
-              <tr><td colspan="2" class="double">{speed} kts</td></tr>
-              <tr><th>lat</th><td>{lat}</td></tr>
-              <tr><th>lng</th><td>{lng}</td></tr>
-              <tr>
-                <td colspan="2">
-                  <div class="line one"></div><div class="line two"></div>
-                  <div class="hours"><div>0</div><div>1h</div><div>2h</div></div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        `,
-          css: `
-          :scope {
-            padding: 5px 8px;
-            background: white;
-          }
-          th {
-            font-weight: normal;
-            color: rgb(0, 0, 0, .7);
-          }
-          td {
-            text-align: center;
-          }
-          td.double {
-            font-size: large;
-          }
-          td div.line {
-            width: 50%;
-            float: left;
-            height: 3px;
-            margin-top: 4px;
-          }
-          td div.line.one {
-            background: #ffcc00;
-          }
-          td div.line.two {
-            background: #3388ff;
-          }
-          td div.hours {
-            width: 100%;
-            float: left;
-            display: flex;
-            justify-content: space-between;
-          }
-        `,
-        },
+        ...defaultOptions$3,
         ...options,
       });
     }
@@ -170,25 +172,26 @@
 
       this.body.innerHTML = leaflet.Util.template(
         this.options.html, {
-          lat,
-          lng,
           heading: heading ? Math.round(heading) : '--',
           speed: Math.round(speed * 36 / nautic) / 10,
+          lat, lng,
         }
       );
     }
   }
 
+  const defaultOptions$2 = {
+    color: '#3388ff',
+    circleColor: '#3388ff',
+    lineColor1: '#ffcc00',
+    lineColor2: '#3388ff',
+  };
+
   class Boat extends leaflet.LayerGroup {
 
     constructor(options) {
       super([], {
-        ...{
-          color: '#3388ff',
-          circleColor: '#3388ff',
-          lineColor1: '#ffcc00',
-          lineColor2: '#3388ff',
-        },
+        ...defaultOptions$2,
         ...options,
       });
 
@@ -293,18 +296,20 @@
     }
   }
 
+  const defaultOptions$1 = {
+    smoothingTimeConstant: 2000,
+    onLocationError(e) {
+      console.error(e);
+    },
+  };
+
   function Boating(map, options) {
     if (map.boating) {
       return map.boating
     }
 
     options = {
-      ...{
-        smoothingTimeConstant: 2000,
-        onLocationError(e) {
-          console.error(e);
-        },
-      },
+      ...defaultOptions$1,
       ...options,
     };
 
@@ -434,13 +439,15 @@
     return map.boating
   }
 
+  const defaultOptions = {
+    position: 'topleft',
+  };
+
   class ControlBoating extends leaflet.Control {
 
     constructor(options) {
       super({
-        ...{
-          position: 'topleft',
-        },
+        ...defaultOptions,
         ...options,
       });
     }

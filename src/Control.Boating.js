@@ -1,13 +1,15 @@
 import { Control, DomUtil, DomEvent } from 'leaflet'
 import { Boating } from './Boating.js'
 
+const defaultOptions = {
+  position: 'topleft',
+}
+
 export class ControlBoating extends Control {
 
   constructor(options) {
     super({
-      ...{
-        position: 'topleft',
-      },
+      ...defaultOptions,
       ...options,
     })
   }

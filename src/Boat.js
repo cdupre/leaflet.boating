@@ -1,16 +1,18 @@
 import { LayerGroup, Marker, DivIcon, Circle, Polyline } from 'leaflet'
 import { sinDeg, cosDeg } from './utils.js'
 
+const defaultOptions = {
+  color: '#3388ff',
+  circleColor: '#3388ff',
+  lineColor1: '#ffcc00',
+  lineColor2: '#3388ff',
+}
+
 export class Boat extends LayerGroup {
 
   constructor(options) {
     super([], {
-      ...{
-        color: '#3388ff',
-        circleColor: '#3388ff',
-        lineColor1: '#ffcc00',
-        lineColor2: '#3388ff',
-      },
+      ...defaultOptions,
       ...options,
     })
 
