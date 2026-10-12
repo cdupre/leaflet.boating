@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Two frames</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <style>
+        html, body {
+            margin: 0;
+            height: 100%;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        iframe {
+            flex: 1;
+            width: 100%;
+            border: none;
+        }
+        iframe + iframe {
+            border-top: 2px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <iframe src="/test"></iframe>
+    <iframe src="/test"></iframe>
+</body>
+</html>

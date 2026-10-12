@@ -14,6 +14,15 @@ export function atan2Deg(y, x) {
   return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360
 }
 
+export function lerp(a, b, t) {
+  return a + (b - a) * t
+}
+
+export function lerpDeg(a, b, t) {
+  const d = ((b - a + 540) % 360) - 180
+  return (a + d * t + 360) % 360
+}
+
 export function latlngDMS(latlng) {
   function dms(coord) {
     let float = Math.abs(coord)
@@ -42,45 +51,4 @@ export function latlngDMS(latlng) {
     lat: dms(latlng.lat) + ((latlng.lat < 0) ? 'S' : 'N'),
     lng: dms(latlng.lng) + ((latlng.lng < 0) ? 'W' : 'E'),
   }
-}
-
-export function createMotionSmoother(tau) {
-  let ts = null
-  let vx = null
-  let vy = null
-
-  function reset() {
-    ts = vx = vy = null
-  }
-
-  function add(e) {
-    let newVx = 0
-    let newVy = 0
-
-    if (isNb(e.speed) && isNb(e.heading)) {
-      newVx = e.speed * sinDeg(e.heading)
-      newVy = e.speed * cosDeg(e.heading)
-    }
-
-    if (!isNb(ts) || !(tau > 0)) {
-      vx = newVx
-      vy = newVy
-      ts = e.timestamp
-    }
-    else if (e.timestamp > ts) {
-      const dt = e.timestamp - ts
-      const alpha = 1 - Math.exp(-dt / tau)
-      vx = alpha * newVx + (1 - alpha) * vx
-      vy = alpha * newVy + (1 - alpha) * vy
-      ts = e.timestamp
-    }
-
-    return {
-      ...e,
-      heading: atan2Deg(vx, vy),
-      speed: Math.hypot(vx, vy),
-    }
-  }
-
-  return { reset, add }
 }

@@ -1,4 +1,4 @@
-import { Control, DomUtil, Util, LayerGroup, Marker, DivIcon, Circle, Polyline, DomEvent } from 'leaflet';
+import { LatLng, Control, DomUtil, Util, LayerGroup, Marker, DivIcon, Circle, Polyline, DomEvent } from 'leaflet';
 
 function isNb(n) {
   return Number.isFinite(n)
@@ -14,6 +14,15 @@ function sinDeg(d) {
 
 function atan2Deg(y, x) {
   return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t
+}
+
+function lerpDeg(a, b, t) {
+  const d = ((b - a + 540) % 360) - 180;
+  return (a + d * t + 360) % 360
 }
 
 function latlngDMS(latlng) {
@@ -46,7 +55,18 @@ function latlngDMS(latlng) {
   }
 }
 
-function createMotionSmoother(tau) {
+const defaultOptions$5 = {
+  enabled: true,
+  timeConstant: 2000,
+};
+
+function createMotionSmoother(options) {
+
+  options = {
+    ...defaultOptions$5,
+    ...options,
+  };
+
   let ts = null;
   let vx = null;
   let vy = null;
@@ -64,14 +84,14 @@ function createMotionSmoother(tau) {
       newVy = e.speed * cosDeg(e.heading);
     }
 
-    if (!isNb(ts) || !(tau > 0)) {
+    if (!isNb(ts) || !(options.timeConstant > 0) || !options.enabled) {
       vx = newVx;
       vy = newVy;
       ts = e.timestamp;
     }
     else if (e.timestamp > ts) {
       const dt = e.timestamp - ts;
-      const alpha = 1 - Math.exp(-dt / tau);
+      const alpha = 1 - Math.exp(-dt / options.timeConstant);
       vx = alpha * newVx + (1 - alpha) * vx;
       vy = alpha * newVy + (1 - alpha) * vy;
       ts = e.timestamp;
@@ -85,6 +105,75 @@ function createMotionSmoother(tau) {
   }
 
   return { reset, add }
+}
+
+const defaultOptions$4 = {
+  enabled: true,
+  frameInterval: 33,
+  maxDuration: 3000,
+};
+
+function createMotionAnimator(options) {
+
+  options = {
+    ...defaultOptions$4,
+    ...options,
+  };
+
+  let frame;
+  let raf;
+
+  function start(e, cb) {
+    cancelAnimationFrame(raf);
+
+    if (
+      !frame ||
+      !options.enabled ||
+      e.timestamp - frame.timestamp <= 0 ||
+      e.timestamp - frame.timestamp > options.maxDuration
+    ) {
+      frame = e;
+      cb(frame);
+      return
+    }
+
+    const from = frame;
+    const to = e;
+    const startTime = performance.now();
+    const duration = to.timestamp - from.timestamp;
+    let last = -Infinity;
+
+    function step(now) {
+      const t = Math.min((now - startTime) / duration, 1);
+
+      if (t === 1 || now - last >= options.frameInterval) {
+        last = now;
+        frame = {
+          ...to,
+          latlng: new LatLng(
+            lerp(from.latlng.lat, to.latlng.lat, t),
+            lerp(from.latlng.lng, to.latlng.lng, t),
+          ),
+          speed: lerp(from.speed, to.speed, t),
+          accuracy: lerp(from.accuracy, to.accuracy, t),
+          heading: lerpDeg(from.heading, to.heading, t),
+        };
+        cb(frame);
+      }
+
+      if (t < 1) raf = requestAnimationFrame(step);
+    }
+
+    step(startTime);
+  }
+
+  function reset() {
+    cancelAnimationFrame(raf);
+    frame = null;
+    raf = null;
+  }
+
+  return { start, reset }
 }
 
 const defaultOptions$3 = {
@@ -196,8 +285,8 @@ class Boat extends LayerGroup {
 
     this._boat = new Marker([0, 0], {
       icon: new DivIcon({
-        iconAnchor: [12.5, 12.5],
-        iconSize: [25, 25],
+        iconAnchor: [12, 12],
+        iconSize: [24, 24],
         className: 'boat',
         html: `
           <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="boat-svg">
@@ -227,23 +316,6 @@ class Boat extends LayerGroup {
     this._line1.addTo(this);
     this._line2.addTo(this);
     this._boat.addTo(this);
-  }
-
-  onAdd(map) {
-    super.onAdd(map);
-    this._map.on('moveend', this._onMoveEnd, this);
-    this._e = null;
-  }
-
-  onRemove(map) {
-    super.onRemove(map);
-    this._map.off('moveend', this._onMoveEnd, this);
-  }
-
-  _onMoveEnd = () => {
-    if (this._e) {
-      this._updateLines(this._e);
-    }
   }
 
   _updateCircle(e) {
@@ -288,7 +360,6 @@ class Boat extends LayerGroup {
   }
 
   update(e) {
-    this._e = e;
     this._updateBoat(e);
     this._updateLines(e);
     this._updateCircle(e);
@@ -296,7 +367,6 @@ class Boat extends LayerGroup {
 }
 
 const defaultOptions$1 = {
-  smoothingTimeConstant: 2000,
   onLocationError(e) {
     console.error(e);
   },
@@ -314,9 +384,11 @@ function Boating(map, options) {
 
   const boat = new Boat(options.boat);
   const legend = new Legend(options.legend);
-  const motionSmoother = createMotionSmoother(options.smoothingTimeConstant);
+  const motionSmoother = createMotionSmoother(options.smoothing);
+  const motionAnimator = createMotionAnimator(options.animation);
 
-  let eSmoothed;
+  let lastFrame;
+  let lastTimestamp;
   let savedZoomOptions;
   let state = 'idle';
 
@@ -326,35 +398,35 @@ function Boating(map, options) {
   }
 
   function start() {
+    map.on('moveend', onMoveEnd);
+    map.on('zoomend', onZoomEnd);
     map.on('dragstart', onDragStart);
     map.on('locationfound', onLocationFound);
     map.on('locationerror', onLocationError);
     map.locate({ watch: true, enableHighAccuracy: true });
-    motionSmoother.reset();
-    eSmoothed = null;
     saveZoomInteractions();
     setState('requesting');
   }
 
   function stop() {
     map.stopLocate();
+    map.off('moveend', onMoveEnd);
+    map.off('zoomend', onZoomEnd);
     map.off('dragstart', onDragStart);
     map.off('locationfound', onLocationFound);
     map.off('locationerror', onLocationError);
     map.removeControl(legend);
     map.removeLayer(boat);
+    motionAnimator.reset();
+    motionSmoother.reset();
     restoreZoomInteractions();
     setState('idle');
-  }
-
-  function onDragStart() {
-    if (state === 'following') {
-      unfollow();
-    }
+    lastFrame = null;
+    lastTimestamp = null;
   }
 
   function follow() {
-    map.panTo(eSmoothed.latlng);
+    map.panTo(lastFrame.latlng);
     centerZoomInteractions();
     setState('following');
   }
@@ -364,25 +436,65 @@ function Boating(map, options) {
     setState('locating');
   }
 
-  function onLocationFound(e) {
-    if (eSmoothed) {
-      if (eSmoothed.timestamp === e.timestamp) {
-        return
-      }
+  function trigger() {
+    if (state === 'idle') {
+      start();
     }
+    else if (state === 'requesting') {
+      stop();
+    }
+    else if (state === 'following') {
+      stop();
+    }
+    else if (state === 'locating') {
+      follow();
+    }
+  }
 
-    eSmoothed = motionSmoother.add(e);
-
+  function onDragStart() {
     if (state === 'following') {
-      map.panTo(eSmoothed.latlng, { animate: false });
+      unfollow();
     }
+  }
+
+  function onZoomEnd() {
+    if (state === 'following') {
+      boat.update(lastFrame);
+    }
+  }
+
+  function onMoveEnd() {
+    if (state !== 'following' && lastFrame) {
+      boat.update(lastFrame);
+    }
+  }
+
+  function onLocationFound(e) {
+    if (lastTimestamp && e.timestamp <= lastTimestamp) {
+      return
+    }
+
+    lastTimestamp = e.timestamp;
+
     if (state === 'requesting') {
       map.addControl(legend);
       map.addLayer(boat);
+    }
+
+    const eSmoothed = motionSmoother.add(e);
+    legend.update(eSmoothed);
+
+    motionAnimator.start(eSmoothed, function(frame) {
+      if (state === 'following') {
+        map.panTo(frame.latlng, { animate: false });
+      }
+      boat.update(frame);
+      lastFrame = frame;
+    });
+
+    if (state === 'requesting') {
       follow();
     }
-    legend.update(eSmoothed);
-    boat.update(eSmoothed);
   }
 
   function onLocationError(e) {
@@ -409,21 +521,6 @@ function Boating(map, options) {
       map.options.touchZoom = savedZoomOptions.touchZoom;
       map.options.scrollWheelZoom = savedZoomOptions.scrollWheelZoom;
       map.options.doubleClickZoom = savedZoomOptions.doubleClickZoom;
-    }
-  }
-
-  function trigger() {
-    if (state === 'idle') {
-      start();
-    }
-    else if (state === 'requesting') {
-      stop();
-    }
-    else if (state === 'following') {
-      stop();
-    }
-    else if (state === 'locating') {
-      follow();
     }
   }
 

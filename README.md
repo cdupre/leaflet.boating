@@ -16,10 +16,10 @@ Add the following in html headers
 Add the following snippet to your map initialization
 ```js
 // leaflet 1.9.x
-L.control.boating(OPTIONS).addTo(map)
+L.control.boating().addTo(map)
 
 // leaflet 2.0.x
-new L.Control.Boating(OPTIONS).addTo(map)
+new L.Control.Boating().addTo(map)
 ```
 
 #### With npm
@@ -51,8 +51,12 @@ Possible options are listed in the following table
 | Option | Type | Description | Default |
 | --- | --- | --- | --- |
 | `position` | `string`  | position of the control | `topleft` |
-| `smoothingTimeConstant` | `number`  | [`time constant`](https://en.wikipedia.org/wiki/Exponential_smoothing#Time_constant) in milliseconds of the exponential smoothing applied to speed and heading. Higher is smoother but laggier. `0` disables smoothing | `2000` |
 | `onLocationError` | `function`  | called on location errors, receives the [`ErrorEvent`](https://leafletjs.com/reference.html#errorevent) | *(see source in [Boating.js](src/Boating.js))* |
+| `smoothing.enabled` | `boolean` | smooth speed and heading between GPS fixes. `false` displays the raw GPS values | `true` |
+| `smoothing.timeConstant` | `number`  | [`time constant`](https://en.wikipedia.org/wiki/Exponential_smoothing#Time_constant) in milliseconds of the exponential smoothing applied to speed and heading. Higher is smoother but laggier | `2000` |
+| `animation.enabled` | `boolean` | animate the boat and map between GPS fixes | `true` |
+| `animation.frameInterval` | `number` | minimum interval in milliseconds between animation frames. Higher uses less battery but is less smooth. `0` renders every frame | `33` |
+| `animation.maxDuration` | `number` | maximum time in milliseconds between two GPS fixes for the move to be animated. Beyond that, the boat jumps directly to the new position | `3000` |
 | `boat.color` | `string`  | boat color | `#3388ff` |
 | `boat.circleColor` | `string`  | circle color | `#3388ff` |
 | `boat.lineColor1` | `string`  | first color for the line | `#ffcc00` |
@@ -69,7 +73,21 @@ Feel free to suggest or develop new features or modifications :)
 
 ### Files
 
-`src` contains the different Classes
+`src/Control.Boating.js` the Leaflet control (button and icon states)
+
+`src/Control.Boating.css` styles of the control, copied to `dist/` at build time
+
+`src/Boating.js` the core: geolocation, state machine, wiring of smoother, animator, boat and legend
+
+`src/Boat.js` the map layer: boat marker, accuracy circle and heading line
+
+`src/Legend.js` the legend control: heading, speed and coordinates
+
+`src/motionSmoother.js` exponential smoothing of speed and heading (no Leaflet dependency)
+
+`src/motionAnimator.js` linear interpolation between GPS fixes, frame by frame
+
+`src/utils.js` pure helpers: angle math, interpolation, coordinate formatting
 
 `src/iife.js` wrapper to build `dist/L.Control.Boating.js`, for the classic `<script>` tag
 
@@ -96,14 +114,14 @@ stateDiagram-v2
 
 ```
 npm install
-npm run dev     # builds dist files on every change, and serve on port 8080
+npm run dev     # builds dist files on every change, and serves on port 8080
 npm run build   # builds dist files once
 ```
 During dev, index files are served on [http://localhost:8080/test/](http://localhost:8080/test/). Remember to reload pages manually, no hot reload configured !
 
 ### Unit tests
 
-`npm run test` runs `test/utils.test.js`, testing the pure helpers exported from `src/utils.js` (angle math, coordinate formatting, motion smoothing)
+`npm run test` tests the pure helpers exported from `src/utils.js` (angle math, coordinate formatting), and the speed/heading exponential smoother from `src/motionSmoother.js`
 
 ## Demo
 

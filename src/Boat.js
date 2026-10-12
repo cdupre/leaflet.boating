@@ -18,8 +18,8 @@ export class Boat extends LayerGroup {
 
     this._boat = new Marker([0, 0], {
       icon: new DivIcon({
-        iconAnchor: [12.5, 12.5],
-        iconSize: [25, 25],
+        iconAnchor: [12, 12],
+        iconSize: [24, 24],
         className: 'boat',
         html: `
           <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="boat-svg">
@@ -49,23 +49,6 @@ export class Boat extends LayerGroup {
     this._line1.addTo(this)
     this._line2.addTo(this)
     this._boat.addTo(this)
-  }
-
-  onAdd(map) {
-    super.onAdd(map)
-    this._map.on('moveend', this._onMoveEnd, this)
-    this._e = null
-  }
-
-  onRemove(map) {
-    super.onRemove(map)
-    this._map.off('moveend', this._onMoveEnd, this)
-  }
-
-  _onMoveEnd = () => {
-    if (this._e) {
-      this._updateLines(this._e)
-    }
   }
 
   _updateCircle(e) {
@@ -110,7 +93,6 @@ export class Boat extends LayerGroup {
   }
 
   update(e) {
-    this._e = e
     this._updateBoat(e)
     this._updateLines(e)
     this._updateCircle(e)

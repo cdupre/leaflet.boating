@@ -7,7 +7,8 @@ import {
   sinDeg,
   atan2Deg,
   latlngDMS,
-  createMotionSmoother,
+  lerp,
+  lerpDeg,
 } from '../src/utils.js'
 
 const EPS = 1e-9
@@ -149,133 +150,37 @@ test('latlngDMS', async (t) => {
   })
 })
 
-test('createMotionSmoother', async (t) => {
-  await t.test('first sample is returned as is', () => {
-    const s = createMotionSmoother(3000)
-    const out = s.add({ speed: 10, heading: 90, timestamp: 0 })
-    near(out.speed, 10, 1e-9)
-    near(out.heading, 90, 1e-9)
+test('lerp', async (t) => {
+  await t.test('returns a at t = 0 and b at t = 1', () => {
+    assert.equal(lerp(10, 20, 0), 10)
+    assert.equal(lerp(10, 20, 1), 20)
   })
 
-  await t.test('without a previous state, an invalid sample gives zero speed', () => {
-    const s = createMotionSmoother(3000)
-    const stopped = { heading: 0, speed: 0 }
-    assert.deepEqual(s.add({ speed: NaN, heading: NaN, timestamp: 0 }), { ...stopped, timestamp: 0 })
-    assert.deepEqual(s.add({ speed: 10, heading: undefined, timestamp: 1 }), { ...stopped, timestamp: 1 })
-    assert.deepEqual(s.add({ speed: 'x', heading: 90, timestamp: 2 }), { ...stopped, timestamp: 2 })
+  await t.test('interpolates linearly in between', () => {
+    assert.equal(lerp(10, 20, 0.25), 12.5)
+    assert.equal(lerp(20, 10, 0.5), 15)
+  })
+})
+
+test('lerpDeg', async (t) => {
+  await t.test('returns a at t = 0 and b at t = 1', () => {
+    near(lerpDeg(90, 180, 0), 90)
+    near(lerpDeg(90, 180, 1), 180)
   })
 
-  await t.test('the other fields of the sample are passed through', () => {
-    const s = createMotionSmoother(3000)
-    const latlng = { lat: 1, lng: 2 }
-    const out = s.add({ speed: 10, heading: 90, timestamp: 0, latlng })
-    assert.equal(out.latlng, latlng)
-    assert.equal(out.timestamp, 0)
+  await t.test('interpolates linearly in between', () => {
+    near(lerpDeg(90, 180, 0.5), 135)
+    near(lerpDeg(180, 90, 0.5), 135)
   })
 
-  await t.test('an invalid sample after a valid one decays but is not zero', () => {
-    const s = createMotionSmoother(1000)
-    s.add({ speed: 10, heading: 90, timestamp: 0 })
-    const out = s.add({ speed: NaN, heading: NaN, timestamp: 1000 })
-    near(out.speed, 10 * Math.exp(-1), 1e-9)
-    near(out.heading, 90, 1e-9)
+  await t.test('turns the short way through north', () => {
+    near(lerpDeg(350, 10, 0.5), 0)
+    near(lerpDeg(350, 10, 0.25), 355)
+    near(lerpDeg(10, 350, 0.25), 5)
   })
 
-  await t.test('moves toward the new sample by 1 - exp(-dt/tau)', () => {
-    const s = createMotionSmoother(1000)
-    s.add({ speed: 10, heading: 0, timestamp: 0 })
-    const out = s.add({ speed: 20, heading: 0, timestamp: 1000 })
-    near(out.heading, 0, 1e-9)
-    near(out.speed, 10 + 10 * (1 - Math.exp(-1)), 1e-9)
-  })
-
-  await t.test('a longer gap weighs the new sample more', () => {
-    const a = createMotionSmoother(1000)
-    const b = createMotionSmoother(1000)
-    a.add({ speed: 10, heading: 0, timestamp: 0 })
-    b.add({ speed: 10, heading: 0, timestamp: 0 })
-    const short = a.add({ speed: 20, heading: 0, timestamp: 500 })
-    const long = b.add({ speed: 20, heading: 0, timestamp: 5000 })
-    assert.ok(long.speed > short.speed)
-  })
-
-  await t.test('identical timestamps do not change the state', () => {
-    const s = createMotionSmoother(1000)
-    s.add({ speed: 10, heading: 0, timestamp: 0 })
-    near(s.add({ speed: 99, heading: 0, timestamp: 0 }).speed, 10, 1e-9)
-  })
-
-  await t.test('an older timestamp is ignored', () => {
-    const s = createMotionSmoother(1000)
-    const ref = s.add({ speed: 10, heading: 0, timestamp: 1000 })
-    const out = s.add({ speed: 99, heading: 90, timestamp: 500 })
-    near(out.speed, ref.speed, 1e-9)
-    near(out.heading, ref.heading, 1e-9)
-    // and the next sample is still smoothed from the last accepted timestamp (dt = 1s)
-    near(s.add({ speed: 20, heading: 0, timestamp: 2000 }).speed, 10 + 10 * (1 - Math.exp(-1)), 1e-9)
-  })
-
-  await t.test('a valid zero speed is a real sample', () => {
-    const s = createMotionSmoother(1000)
-    s.add({ speed: 10, heading: 0, timestamp: 0 })
-    near(s.add({ speed: 0, heading: 0, timestamp: 1000 }).speed, 10 * Math.exp(-1), 1e-9)
-  })
-
-  await t.test('opposite vectors cancel to zero speed', () => {
-    // tau = 1000 / ln 2 gives alpha = 0.5 after 1s, i.e. equal weights
-    const s = createMotionSmoother(1000 / Math.LN2)
-    s.add({ speed: 10, heading: 0, timestamp: 0 })
-    near(s.add({ speed: 10, heading: 180, timestamp: 1000 }).speed, 0, 1e-9)
-  })
-
-  await t.test('an invalid sample pulls the state toward zero and advances the timestamp', () => {
-    // tau = 1000 / ln 2 gives alpha = 1 - 2^(-dt/1s)
-    const s = createMotionSmoother(1000 / Math.LN2)
-    s.add({ speed: 10, heading: 0, timestamp: 0 })
-    // dt = 0.5s: alpha = 1 - 1/sqrt(2), toward zero -> 10 / sqrt(2)
-    const mid = s.add({ speed: NaN, heading: NaN, timestamp: 500 })
-    near(mid.speed, 10 / Math.SQRT2, 1e-9)
-    // dt counts from the invalid sample (0.5s), not from the last valid one
-    const alpha = 1 - 1 / Math.SQRT2
-    const out = s.add({ speed: 10, heading: 180, timestamp: 1000 })
-    near(out.speed, (1 - alpha) * (10 / Math.SQRT2) - alpha * 10, 1e-9)
-    near(out.heading, 0, 1e-9)
-  })
-
-  await t.test('forgets the past after a long gap', () => {
-    const s = createMotionSmoother(3000)
-    s.add({ speed: 100, heading: 0, timestamp: 0 })
-    const out = s.add({ speed: 30, heading: 90, timestamp: 60000 })
-    near(out.speed, 30, 1e-3)
-    near(out.heading, 90, 1e-3)
-  })
-
-  await t.test('tau = 0 disables smoothing', () => {
-    const s = createMotionSmoother(0)
-    s.add({ speed: 10, heading: 0, timestamp: 0 })
-    // same timestamp (dt = 0) must not produce NaN
-    const same = s.add({ speed: 20, heading: 90, timestamp: 0 })
-    near(same.speed, 20, 1e-9)
-    near(same.heading, 90, 1e-9)
-    const later = s.add({ speed: 30, heading: 180, timestamp: 1000 })
-    near(later.speed, 30, 1e-9)
-    near(later.heading, 180, 1e-9)
-  })
-
-  await t.test('reset() forgets the previous state', () => {
-    const s = createMotionSmoother(3000)
-    s.add({ speed: 10, heading: 90, timestamp: 0 })
-    s.reset()
-    const out = s.add({ speed: 20, heading: 0, timestamp: 1 })
-    near(out.speed, 20, 1e-9)
-    near(out.heading, 0, 1e-9)
-  })
-
-  await t.test('averages heading around the compass correctly', () => {
-    const s = createMotionSmoother(1000 / Math.LN2)
-    s.add({ speed: 10, heading: 350, timestamp: 0 })
-    const out = s.add({ speed: 10, heading: 10, timestamp: 1000 })
-    // mean bearing of 350 and 10 is 0/360, not 180
-    near(Math.min(out.heading, 360 - out.heading), 0, 1e-6)
+  await t.test('stays in [0, 360)', () => {
+    near(lerpDeg(0, 300, 0.5), 330)
+    near(lerpDeg(350, 10, 1), 10)
   })
 })
