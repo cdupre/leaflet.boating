@@ -54,12 +54,6 @@ export function Boating(map, options) {
     setState('idle')
   }
 
-  function onDragStart() {
-    if (state === 'following') {
-      unfollow()
-    }
-  }
-
   function follow() {
     map.panTo(eSmoothed.latlng)
     centerZoomInteractions()
@@ -69,6 +63,27 @@ export function Boating(map, options) {
   function unfollow() {
     restoreZoomInteractions()
     setState('locating')
+  }
+
+  function trigger() {
+    if (state === 'idle') {
+      start()
+    }
+    else if (state === 'requesting') {
+      stop()
+    }
+    else if (state === 'following') {
+      stop()
+    }
+    else if (state === 'locating') {
+      follow()
+    }
+  }
+
+  function onDragStart() {
+    if (state === 'following') {
+      unfollow()
+    }
   }
 
   function onLocationFound(e) {
@@ -116,21 +131,6 @@ export function Boating(map, options) {
       map.options.touchZoom = savedZoomOptions.touchZoom
       map.options.scrollWheelZoom = savedZoomOptions.scrollWheelZoom
       map.options.doubleClickZoom = savedZoomOptions.doubleClickZoom
-    }
-  }
-
-  function trigger() {
-    if (state === 'idle') {
-      start()
-    }
-    else if (state === 'requesting') {
-      stop()
-    }
-    else if (state === 'following') {
-      stop()
-    }
-    else if (state === 'locating') {
-      follow()
     }
   }
 
