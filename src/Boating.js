@@ -1,9 +1,11 @@
-import { createMotionSmoother } from './utils.js'
+import { createMotionSmoother } from './motionSmoother.js'
+import { createMotionAnimator } from './motionAnimator.js'
 import { Legend } from './Legend.js'
 import { Boat } from './Boat.js'
 
 const defaultOptions = {
   smoothingTimeConstant: 2000,
+  animationFrameInterval: 100,
   onLocationError(e) {
     console.error(e)
   },
@@ -22,8 +24,9 @@ export function Boating(map, options) {
   const boat = new Boat(options.boat)
   const legend = new Legend(options.legend)
   const motionSmoother = createMotionSmoother(options.smoothingTimeConstant)
+  const motionAnimator = createMotionAnimator(options.animationFrameInterval)
 
-  let eSmoothed
+  let eLast
   let savedZoomOptions
   let state = 'idle'
 
@@ -37,8 +40,6 @@ export function Boating(map, options) {
     map.on('locationfound', onLocationFound)
     map.on('locationerror', onLocationError)
     map.locate({ watch: true, enableHighAccuracy: true })
-    motionSmoother.reset()
-    eSmoothed = null
     saveZoomInteractions()
     setState('requesting')
   }
@@ -50,12 +51,14 @@ export function Boating(map, options) {
     map.off('locationerror', onLocationError)
     map.removeControl(legend)
     map.removeLayer(boat)
+    motionAnimator.reset()
+    motionSmoother.reset()
     restoreZoomInteractions()
     setState('idle')
   }
 
   function follow() {
-    map.panTo(eSmoothed.latlng)
+    map.panTo(eLast.latlng)
     centerZoomInteractions()
     setState('following')
   }
@@ -87,24 +90,33 @@ export function Boating(map, options) {
   }
 
   function onLocationFound(e) {
-    if (eSmoothed) {
-      if (eSmoothed.timestamp === e.timestamp) {
+    if (eLast) {
+      if (e.timestamp <= eLast.timestamp) {
         return
       }
     }
 
-    eSmoothed = motionSmoother.add(e)
+    eLast = e
 
-    if (state === 'following') {
-      map.panTo(eSmoothed.latlng, { animate: false })
-    }
     if (state === 'requesting') {
       map.addControl(legend)
       map.addLayer(boat)
+    }
+
+    const eSmoothed = motionSmoother.add(e)
+    legend.update(eSmoothed)
+
+    motionAnimator.start(eSmoothed, function(frame) {
+      boat.update(frame)
+
+      if (state === 'following') {
+        map.panTo(frame.latlng, { animate: false })
+      }
+    })
+
+    if (state === 'requesting') {
       follow()
     }
-    legend.update(eSmoothed)
-    boat.update(eSmoothed)
   }
 
   function onLocationError(e) {

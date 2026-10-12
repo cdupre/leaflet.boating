@@ -17,6 +17,15 @@
     return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360
   }
 
+  function lerp(a, b, t) {
+    return a + (b - a) * t
+  }
+
+  function lerpDeg(a, b, t) {
+    const d = ((b - a + 540) % 360) - 180;
+    return (a + d * t + 360) % 360
+  }
+
   function latlngDMS(latlng) {
     function dms(coord) {
       let float = Math.abs(coord);
@@ -86,6 +95,61 @@
     }
 
     return { reset, add }
+  }
+
+  // fixes further apart (GPS loss, device sleep) jump instead of animating
+  const MAX_DURATION = 5000;
+
+  function createMotionAnimator(interval) {
+    let timer;
+    let frame;
+
+    function start(e, cb) {
+      clearInterval(timer);
+
+      if (
+        !frame
+        || e.timestamp <= frame.timestamp
+        || e.timestamp - frame.timestamp > MAX_DURATION
+        || !(interval > 0)
+      ) {
+        frame = e;
+        cb(frame);
+        return
+      }
+
+      const from = frame;
+      const to = e;
+      const startTime = performance.now();
+      const duration = to.timestamp - from.timestamp;
+
+      function step() {
+        const t = Math.min((performance.now() - startTime) / duration, 1);
+        frame = {
+          ...to,
+          latlng: new leaflet.LatLng(
+            lerp(from.latlng.lat, to.latlng.lat, t),
+            lerp(from.latlng.lng, to.latlng.lng, t),
+          ),
+          speed: lerp(from.speed, to.speed, t),
+          accuracy: lerp(from.accuracy, to.accuracy, t),
+          heading: lerpDeg(from.heading, to.heading, t),
+        };
+        cb(frame);
+        if (t >= 1) clearInterval(timer);
+      }
+
+      step();
+      timer = setInterval(step, interval);
+    }
+
+    function reset() {
+      clearInterval(timer);
+      timer = null;
+      frame = null;
+    }
+
+    return { start, reset }
   }
 
   const defaultOptions$3 = {
@@ -298,6 +362,7 @@
 
   const defaultOptions$1 = {
     smoothingTimeConstant: 2000,
+    animationFrameInterval: 100,
     onLocationError(e) {
       console.error(e);
     },
@@ -316,8 +381,9 @@
     const boat = new Boat(options.boat);
     const legend = new Legend(options.legend);
     const motionSmoother = createMotionSmoother(options.smoothingTimeConstant);
+    const motionAnimator = createMotionAnimator(options.animationFrameInterval);
 
-    let eSmoothed;
+    let eLast;
     let savedZoomOptions;
     let state = 'idle';
 
@@ -331,8 +397,6 @@
       map.on('locationfound', onLocationFound);
       map.on('locationerror', onLocationError);
       map.locate({ watch: true, enableHighAccuracy: true });
-      motionSmoother.reset();
-      eSmoothed = null;
       saveZoomInteractions();
       setState('requesting');
     }
@@ -344,18 +408,15 @@
       map.off('locationerror', onLocationError);
       map.removeControl(legend);
       map.removeLayer(boat);
+      motionAnimator.reset();
+      motionSmoother.reset();
+      eLast = null;
       restoreZoomInteractions();
       setState('idle');
     }
 
-    function onDragStart() {
-      if (state === 'following') {
-        unfollow();
-      }
-    }
-
     function follow() {
-      map.panTo(eSmoothed.latlng);
+      map.panTo(eLast.latlng);
       centerZoomInteractions();
       setState('following');
     }
@@ -365,25 +426,55 @@
       setState('locating');
     }
 
+    function trigger() {
+      if (state === 'idle') {
+        start();
+      }
+      else if (state === 'requesting') {
+        stop();
+      }
+      else if (state === 'following') {
+        stop();
+      }
+      else if (state === 'locating') {
+        follow();
+      }
+    }
+
+    function onDragStart() {
+      if (state === 'following') {
+        unfollow();
+      }
+    }
+
     function onLocationFound(e) {
-      if (eSmoothed) {
-        if (eSmoothed.timestamp === e.timestamp) {
+      if (eLast) {
+        if (e.timestamp <= eLast.timestamp) {
           return
         }
       }
 
-      eSmoothed = motionSmoother.add(e);
+      eLast = e;
 
-      if (state === 'following') {
-        map.panTo(eSmoothed.latlng, { animate: false });
-      }
       if (state === 'requesting') {
         map.addControl(legend);
         map.addLayer(boat);
+      }
+
+      const eSmoothed = motionSmoother.add(e);
+      legend.update(eSmoothed);
+
+      motionAnimator.start(eSmoothed, function(frame) {
+        boat.update(frame);
+
+        if (state === 'following') {
+          map.panTo(frame.latlng, { animate: false });
+        }
+      });
+
+      if (state === 'requesting') {
         follow();
       }
-      legend.update(eSmoothed);
-      boat.update(eSmoothed);
     }
 
     function onLocationError(e) {
@@ -410,21 +501,6 @@
         map.options.touchZoom = savedZoomOptions.touchZoom;
         map.options.scrollWheelZoom = savedZoomOptions.scrollWheelZoom;
         map.options.doubleClickZoom = savedZoomOptions.doubleClickZoom;
-      }
-    }
-
-    function trigger() {
-      if (state === 'idle') {
-        start();
-      }
-      else if (state === 'requesting') {
-        stop();
-      }
-      else if (state === 'following') {
-        stop();
-      }
-      else if (state === 'locating') {
-        follow();
       }
     }
 
