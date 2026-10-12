@@ -14,6 +14,15 @@ export function atan2Deg(y, x) {
   return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360
 }
 
+export function lerp(a, b, t) {
+  return a + (b - a) * t
+}
+
+export function lerpDeg(a, b, t) {
+  const d = ((b - a + 540) % 360) - 180
+  return (a + d * t + 360) % 360
+}
+
 export function latlngDMS(latlng) {
   function dms(coord) {
     let float = Math.abs(coord)

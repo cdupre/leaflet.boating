@@ -52,6 +52,7 @@ Possible options are listed in the following table
 | --- | --- | --- | --- |
 | `position` | `string`  | position of the control | `topleft` |
 | `smoothingTimeConstant` | `number`  | [`time constant`](https://en.wikipedia.org/wiki/Exponential_smoothing#Time_constant) in milliseconds of the exponential smoothing applied to speed and heading. Higher is smoother but laggier. `0` disables smoothing | `2000` |
+| `animation` | `boolean`  | animates the boat and map by linear interpolation between GPS fixes | `true` |
 | `onLocationError` | `function`  | called on location errors, receives the [`ErrorEvent`](https://leafletjs.com/reference.html#errorevent) | *(see source in [Boating.js](src/Boating.js))* |
 | `boat.color` | `string`  | boat color | `#3388ff` |
 | `boat.circleColor` | `string`  | circle color | `#3388ff` |

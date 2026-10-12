@@ -8,6 +8,8 @@ import {
   atan2Deg,
   latlngDMS,
   createMotionSmoother,
+  lerp,
+  lerpDeg,
 } from '../src/utils.js'
 
 const EPS = 1e-9
@@ -277,5 +279,40 @@ test('createMotionSmoother', async (t) => {
     const out = s.add({ speed: 10, heading: 10, timestamp: 1000 })
     // mean bearing of 350 and 10 is 0/360, not 180
     near(Math.min(out.heading, 360 - out.heading), 0, 1e-6)
+  })
+})
+
+test('lerp', async (t) => {
+  await t.test('returns a at t = 0 and b at t = 1', () => {
+    assert.equal(lerp(10, 20, 0), 10)
+    assert.equal(lerp(10, 20, 1), 20)
+  })
+
+  await t.test('interpolates linearly in between', () => {
+    assert.equal(lerp(10, 20, 0.25), 12.5)
+    assert.equal(lerp(20, 10, 0.5), 15)
+  })
+})
+
+test('lerpDeg', async (t) => {
+  await t.test('returns a at t = 0 and b at t = 1', () => {
+    near(lerpDeg(90, 180, 0), 90)
+    near(lerpDeg(90, 180, 1), 180)
+  })
+
+  await t.test('interpolates linearly in between', () => {
+    near(lerpDeg(90, 180, 0.5), 135)
+    near(lerpDeg(180, 90, 0.5), 135)
+  })
+
+  await t.test('turns the short way through north', () => {
+    near(lerpDeg(350, 10, 0.5), 0)
+    near(lerpDeg(350, 10, 0.25), 355)
+    near(lerpDeg(10, 350, 0.25), 5)
+  })
+
+  await t.test('stays in [0, 360)', () => {
+    near(lerpDeg(0, 300, 0.5), 330)
+    near(lerpDeg(350, 10, 1), 10)
   })
 })
